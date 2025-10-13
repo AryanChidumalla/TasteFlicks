@@ -4,7 +4,8 @@ import {
   getTVShowDetails,
   getTVShowVideos, // New API function
   getTVShowCredits, // New API function
-  getTVWatchProviders, // New API function
+  getTVWatchProviders,
+  getSimilarTVShows, // New API function
 } from "../movieAPI";
 import { Bookmark, ThumbsDown, ThumbsUp, Star } from "react-feather";
 import { Black200Button, PrimaryButton } from "../buttons";
@@ -18,6 +19,7 @@ import { useSelector } from "react-redux";
 import ISO6391 from "iso-639-1";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
+import TVShowCard from "../components/tvShowCard";
 
 // --- Setup i18n ---
 countries.registerLocale(enLocale);
@@ -236,29 +238,35 @@ export default function TVShowDetails() {
   const [userPreference, setUserPreference] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState("loading"); // 'loading', 'success', 'error'
+  const [relatedTVShows, setRelatedMovies] = useState([]);
 
   // Consolidated API Fetching
   useEffect(() => {
     const fetchData = async () => {
       setStatus("loading");
       try {
-        const [details, videosData, creditsData, providersData] =
-          await Promise.all([
-            getTVShowDetails(id),
-            getTVShowVideos(id),
-            getTVShowCredits(id),
-            getTVWatchProviders(id),
-          ]);
+        const [
+          details,
+          videosData,
+          creditsData,
+          providersData,
+          similarTVShows,
+        ] = await Promise.all([
+          getTVShowDetails(id),
+          getTVShowVideos(id),
+          getTVShowCredits(id),
+          getTVWatchProviders(id),
+          getSimilarTVShows(id),
+        ]);
 
-        // Check for TMDB error response
         if (details && details.success === false)
           throw new Error(details.status_message || "TV show not found.");
 
         setTVDetails(details);
         setVideos(videosData);
         setCredits(creditsData);
+        setRelatedMovies(similarTVShows?.results || []);
 
-        // Prioritize US, then IN, then fallback to first available
         const countryKey = providersData?.US
           ? "US"
           : providersData?.IN
@@ -483,16 +491,28 @@ export default function TVShowDetails() {
       <hr className="max-w-7xl mx-auto border-black-300" />
       <TVWatchProviders providers={providers} />
 
-      <RelatedTVShows />
+      <RelatedTVShows relatedTVShows={relatedTVShows} />
     </div>
   );
 }
 
-function RelatedTVShows() {
+function RelatedTVShows({ relatedTVShows }) {
+  if (!relatedTVShows || relatedTVShows.length === 0)
+    return (
+      <div className="text-white-300 text-center mt-6">
+        No related TV shows found.
+      </div>
+    );
+
   return (
     <div className="flex flex-col p-4 sm:p-6 md:p-10 gap-5 max-w-7xl mx-auto text-white-100">
       <h2 className="font-semibold text-2xl sm:text-3xl">Related TV Shows</h2>
-      <p className="text-white-300">Coming soon...</p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {relatedTVShows.map((tv) => (
+          <TVShowCard key={tv.id} item={tv} />
+        ))}
+      </div>
     </div>
   );
 }

@@ -331,3 +331,31 @@ export function useGenres() {
 
   return genres;
 }
+
+// --- New: Get Similar Movies ---
+export async function getSimilarMovies(movieId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Failed to fetch similar movies:", error);
+    return [];
+  }
+}
+
+// --- New: Get Similar TV Shows ---
+export async function getSimilarTVShows(tvId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}/similar?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Failed to fetch similar TV shows:", error);
+    return [];
+  }
+}

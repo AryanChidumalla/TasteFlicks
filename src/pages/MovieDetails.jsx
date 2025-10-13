@@ -5,6 +5,7 @@ import {
   getMovieVideos,
   getMovieCredits,
   getWatchProviders,
+  getSimilarMovies,
 } from "../movieAPI";
 import { Bookmark, ThumbsDown, ThumbsUp } from "react-feather";
 import { Black200Button, PrimaryButton } from "../buttons";
@@ -15,6 +16,7 @@ import {
   upsertMediaItem,
 } from "../supabasePreferences";
 import { useSelector } from "react-redux";
+import { MovieCard } from "../components/movieCard";
 
 // --- Constants ---
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -208,6 +210,7 @@ export default function MovieDetails() {
   const [providers, setProviders] = useState(null);
   const [userPreference, setUserPreference] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [relatedMovies, setRelatedMovies] = useState([]);
   const [status, setStatus] = useState("loading"); // 'loading', 'success', 'error'
 
   // Fetch all movie-related data
@@ -215,17 +218,19 @@ export default function MovieDetails() {
     const fetchData = async () => {
       setStatus("loading");
       try {
-        const [details, videosData, creditsData, providersData] =
+        const [details, videosData, creditsData, providersData, relatedMovies] =
           await Promise.all([
             getMovieDetails(id),
             getMovieVideos(id),
             getMovieCredits(id),
             getWatchProviders(id),
+            getSimilarMovies(id),
           ]);
 
         setMovieDetails(details);
         setVideos(videosData);
         setCredits(creditsData);
+        setRelatedMovies(relatedMovies);
 
         // Prioritize US, then IN, then fallback to first available
         const countryKey = providersData?.US
@@ -438,16 +443,23 @@ export default function MovieDetails() {
       <hr className="max-w-7xl mx-auto border-black-300" />
       <WatchProviders providers={providers} />
 
-      <RelatedMovies />
+      <RelatedMovies relatedMovies={relatedMovies} />
     </div>
   );
 }
 
-function RelatedMovies() {
+function RelatedMovies({ relatedMovies }) {
+  if (!relatedMovies || relatedMovies.length === 0) return null;
+
   return (
     <div className="flex flex-col p-4 sm:p-6 md:p-10 gap-5 max-w-7xl mx-auto text-white-100">
       <h2 className="font-semibold text-2xl sm:text-3xl">Related Movies</h2>
-      <p className="text-white-300">Coming soon...</p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {relatedMovies.map((movie) => (
+          <MovieCard key={movie.id} item={movie} />
+        ))}
+      </div>
     </div>
   );
 }
