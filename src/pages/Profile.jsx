@@ -3,10 +3,10 @@ import { Bookmark, Film, Layers, Tv } from "react-feather";
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Black200Button, PrimaryButton } from "../buttons";
-import Watchlist from "../ProfileComponent/WatchList";
 import MoviesSection from "../ProfileComponent/MoviesSection";
 import TVShowsSection from "../ProfileComponent/TVShowsSection";
 import OverviewSection from "../ProfileComponent/OverviewSection";
+import Watchlist from "../ProfileComponent/Watchlist";
 
 const handleSignOut = async () => {
   const { error } = await supabase.auth.signOut();
