@@ -265,7 +265,7 @@ export default function TVShowDetails() {
         setTVDetails(details);
         setVideos(videosData);
         setCredits(creditsData);
-        setRelatedMovies(similarTVShows?.results || []);
+        setRelatedMovies(similarTVShows);
 
         const countryKey = providersData?.US
           ? "US"
@@ -282,6 +282,8 @@ export default function TVShowDetails() {
     };
     fetchData();
   }, [id]);
+
+  console.log(relatedTVShows);
 
   // Fetch user preference
   useEffect(() => {

@@ -1,8 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useGenres } from "../movieAPI";
 
 export function MovieCard({ item }) {
-  const navigate = useNavigate();
   const genres = useGenres();
 
   const getGenreName = (id) => {
@@ -11,15 +10,15 @@ export function MovieCard({ item }) {
   };
 
   const maxVisibleGenres = 2;
-  const totalGenres = item.genre_ids.length;
-  const visibleGenres = item.genre_ids.slice(0, maxVisibleGenres);
-  const hiddenCount = totalGenres - maxVisibleGenres;
+  // const totalGenres = item.genre_ids.length;
+  // const visibleGenres = item.genre_ids.slice(0, maxVisibleGenres);
+  // const hiddenCount = totalGenres - maxVisibleGenres;
 
-  console.log(item);
+  // console.log(item);
 
   return (
-    <div
-      onClick={() => navigate(`/movie/${item.id}`)}
+    <Link
+      to={`/movie/${item.id}`}
       className="flex flex-col bg-black-200 border border-black-300 text-white-100 rounded w-[200px] hover:scale-105 hover:shadow-lg transition-all cursor-pointer"
     >
       <div className="relative">
@@ -31,7 +30,7 @@ export function MovieCard({ item }) {
           className="block"
         />
         <div className="absolute flex gap-2 items-center top-2 left-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
-          <div>{item.vote_average.toFixed(1)}</div>
+          <div>{item?.vote_average?.toFixed(1)}</div>
         </div>
 
         {item.adult && (
@@ -44,6 +43,7 @@ export function MovieCard({ item }) {
       <div className="px-5 py-2.5 flex flex-col gap-2.5">
         <div className="font-xl font-semibold truncate">{item.title}</div>
 
+        {/* Uncomment if needed */}
         {/* <div className="text-sm">{item.release_date.slice(0, 4)}</div> */}
 
         {/* <div className="flex flex-wrap gap-2">
@@ -63,6 +63,6 @@ export function MovieCard({ item }) {
           )}
         </div> */}
       </div>
-    </div>
+    </Link>
   );
 }

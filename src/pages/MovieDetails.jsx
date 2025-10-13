@@ -213,6 +213,10 @@ export default function MovieDetails() {
   const [relatedMovies, setRelatedMovies] = useState([]);
   const [status, setStatus] = useState("loading"); // 'loading', 'success', 'error'
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [id]);
+
   // Fetch all movie-related data
   useEffect(() => {
     const fetchData = async () => {

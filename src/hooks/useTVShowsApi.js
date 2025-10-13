@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   getPopularTVShows,
   getTopRatedTVShows,
@@ -7,37 +7,59 @@ import {
   getTrendingTVShows,
 } from "../movieAPI"; // adjust path as needed
 
-export const usePopularTVShows = (page = 1) =>
-  useQuery({
-    queryKey: ["tvshows", "popular", page],
-    queryFn: () => getPopularTVShows(page),
-    keepPreviousData: true,
+export function usePopularTVShowsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["popular-tvshows-infinite"],
+    queryFn: ({ pageParam = 1 }) => getPopularTVShows(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.currentPage < lastPage.totalPages) {
+        return lastPage.currentPage + 1;
+      }
+      return undefined;
+    },
   });
+}
 
-export const useTopRatedTVShows = (page = 1) =>
-  useQuery({
-    queryKey: ["tvshows", "top-rated", page],
-    queryFn: () => getTopRatedTVShows(page),
-    keepPreviousData: true,
+export function useTopRatedTVShowsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["top-rated-tvshows-infinite"],
+    queryFn: ({ pageParam = 1 }) => getTopRatedTVShows(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
+}
 
-export const useAiringTodayTVShows = (page = 1) =>
-  useQuery({
-    queryKey: ["tvshows", "airing-today", page],
-    queryFn: () => getAiringTodayTVShows(page),
-    keepPreviousData: true,
+export function useAiringTodayTVShowsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["airing-today-tvshows-infinite"],
+    queryFn: ({ pageParam = 1 }) => getAiringTodayTVShows(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
+}
 
-export const useOnTheAirTVShows = (page = 1) =>
-  useQuery({
-    queryKey: ["tvshows", "on-the-air", page],
-    queryFn: () => getOnTheAirTVShows(page),
-    keepPreviousData: true,
+export function useOnTheAirTVShowsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["on-the-air-tvshows-infinite"],
+    queryFn: ({ pageParam = 1 }) => getOnTheAirTVShows(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
+}
 
-export const useTrendingTVShows = (page = 1) =>
-  useQuery({
-    queryKey: ["tvshows", "trending", page],
-    queryFn: () => getTrendingTVShows(page),
-    keepPreviousData: true,
+export function useTrendingTVShowsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["trending-tvshows-infinite"],
+    queryFn: ({ pageParam = 1 }) => getTrendingTVShows(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
+}

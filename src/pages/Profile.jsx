@@ -1,58 +1,190 @@
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import ProfileHeader from "../ProfileComponent/ProfileHeader";
+import { useDispatch, useSelector } from "react-redux";
 import { Bookmark, Film, Layers, Tv } from "react-feather";
-import { useState } from "react";
-import { supabase } from "../supabaseClient";
-import { Black200Button, PrimaryButton } from "../buttons";
-import MoviesSection from "../ProfileComponent/MoviesSection";
-import TVShowsSection from "../ProfileComponent/TVShowsSection";
+import { motion } from "framer-motion";
 import OverviewSection from "../ProfileComponent/OverviewSection";
 import Watchlist from "../ProfileComponent/Watchlist";
-
-const handleSignOut = async () => {
-  const { error } = await supabase.auth.signOut();
-  if (error) console.error("Error signing out:", error.message);
-};
+import MoviesSection from "../ProfileComponent/MoviesSection";
+import TVShowsSection from "../ProfileComponent/TVShowsSection";
+import RecentActivity from "../ProfileComponent/RecentActivity";
+import StatsSection from "../ProfileComponent/StatsSection";
+import { getMediaByPreference } from "../supabasePreferences";
+import { setUserData } from "../redux/userSlice";
+import { getMovieDetails, getTVShowDetails } from "../movieAPI";
 
 export default function Profile() {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
+  const userData = useSelector((state) => state.user.data);
+  const userId = user?.id;
+
+  const [loading, setLoading] = useState(false);
   const [profileSection, setProfileSection] = useState("Overview");
 
-  const renderButton = (name, Icon) => {
-    const ButtonComponent =
-      profileSection === name ? PrimaryButton : Black200Button;
-    return (
-      <ButtonComponent
-        key={name}
-        name={name}
-        icon={Icon}
-        onClick={() => setProfileSection(name)}
-      />
-    );
+  const movieGenres = userData?.movieGenres || {};
+  const tvGenres = userData?.tvGenres || {};
+  const movieStats = userData?.movieStats || {};
+  const tvStats = userData?.tvStats || {};
+
+  useEffect(() => {
+    async function fetchOverviewData() {
+      if (!userId) return;
+
+      // If we already have data in Redux, skip fetching
+      if (userData?.movieStats && userData?.tvStats) return;
+
+      setLoading(true);
+
+      // Fetch media preference IDs in parallel
+      const [
+        likedMovieIds,
+        dislikedMovieIds,
+        watchlistMovieIds,
+        likedTVIds,
+        dislikedTVIds,
+        watchlistTVIds,
+      ] = await Promise.all([
+        getMediaByPreference(userId, "like", "movie"),
+        getMediaByPreference(userId, "dislike", "movie"),
+        getMediaByPreference(userId, "watchlist", "movie"),
+        getMediaByPreference(userId, "like", "tv"),
+        getMediaByPreference(userId, "dislike", "tv"),
+        getMediaByPreference(userId, "watchlist", "tv"),
+      ]);
+
+      // Fetch full media details in parallel
+      const [
+        likedMovies,
+        dislikedMovies,
+        watchlistMovies,
+        likedTV,
+        dislikedTV,
+        watchlistTV,
+      ] = await Promise.all([
+        Promise.all(likedMovieIds.map(getMovieDetails)),
+        Promise.all(dislikedMovieIds.map(getMovieDetails)),
+        Promise.all(watchlistMovieIds.map(getMovieDetails)),
+        Promise.all(likedTVIds.map(getTVShowDetails)),
+        Promise.all(dislikedTVIds.map(getTVShowDetails)),
+        Promise.all(watchlistTVIds.map(getTVShowDetails)),
+      ]);
+
+      // MOVIE STATS
+      const watchedMovies = [...likedMovies, ...dislikedMovies];
+      const movieGenreMap = {};
+      let totalRuntimeMinutesForMovies = 0;
+
+      watchedMovies.forEach((movie) => {
+        movie.genres?.forEach((genre) => {
+          movieGenreMap[genre.name] = (movieGenreMap[genre.name] || 0) + 1;
+        });
+        totalRuntimeMinutesForMovies += movie.runtime ?? 0;
+      });
+
+      const newMovieStats = {
+        total: watchedMovies.length,
+        hoursWatched: Math.round(totalRuntimeMinutesForMovies / 60),
+        likeCount: likedMovies.length,
+        dislikeCount: dislikedMovies.length,
+        watchlistCount: watchlistMovies.length,
+      };
+
+      // TV STATS
+      const watchedTV = [...likedTV, ...dislikedTV];
+      const tvGenreMap = {};
+      let totalRuntimeMinutesForTVShows = 0;
+
+      watchedTV.forEach((show) => {
+        show.genres?.forEach((genre) => {
+          tvGenreMap[genre.name] = (tvGenreMap[genre.name] || 0) + 1;
+        });
+
+        const episodeLength = show.episode_run_time?.[0] ?? 30;
+        const episodeCount = show.number_of_episodes || 0;
+        totalRuntimeMinutesForTVShows += episodeLength * episodeCount;
+      });
+
+      const newTVStats = {
+        total: watchedTV.length,
+        hoursWatched: Math.round(totalRuntimeMinutesForTVShows / 60),
+        likeCount: likedTV.length,
+        dislikeCount: dislikedTV.length,
+        watchlistCount: watchlistTV.length,
+      };
+
+      // Dispatch to Redux
+      dispatch(
+        setUserData({
+          movieStats: newMovieStats,
+          tvStats: newTVStats,
+          movieGenres: movieGenreMap,
+          tvGenres: tvGenreMap,
+        })
+      );
+
+      setLoading(false);
+    }
+
+    fetchOverviewData();
+  }, [userId]);
+
+  const handleTabClick = (name) => {
+    setProfileSection(name);
+    localStorage.setItem("profileSection", name);
   };
 
-  if (!user) return null;
+  const tabs = [
+    { name: "Overview", Icon: Layers },
+    { name: "Movies", Icon: Film },
+    { name: "TV Shows", Icon: Tv },
+    { name: "Watchlist", Icon: Bookmark },
+  ];
 
   return (
     <div>
-      <section className="p-6 md:p-10 bg-gradient-to-r from-black-100 via-[#1F1A4D] to-primary-300 flex flex-col gap-8">
-        <h1 className="text-4xl sm:text-5xl font-semibold text-white-100 text-start">
-          Hi, <span className="text-primary-100">{user.display_name}</span>
-        </h1>
+      {/* ProfileHeader here */}
+      <ProfileHeader
+        user={user}
+        hoursWatched={movieStats?.hoursWatched + tvStats?.hoursWatched || 0}
+        genreCount={{ ...movieGenres, ...tvGenres }}
+      />
 
-        <div className="flex flex-wrap gap-3 md:gap-5 justify-start">
-          {renderButton("Overview", Layers)}
-          {renderButton("Movies", Film)}
-          {renderButton("TV Shows", Tv)}
-          {renderButton("Watchlist", Bookmark)}
-          <PrimaryButton name="Sign Out" onClick={handleSignOut} />
-        </div>
-      </section>
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 text-white-100 sm:gap-3 md:gap-5 relative border-b border-black-300 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab.name}
+            onClick={() => handleTabClick(tab.name)}
+            className="relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 text-sm sm:text-base md:text-base font-medium whitespace-nowrap"
+          >
+            <tab.Icon size={16} />
+            {tab.name}
 
+            {/* Animated underline */}
+            {profileSection === tab.name && (
+              <motion.div
+                layoutId="underline"
+                className="absolute bottom-0 left-0 w-full h-0.5 bg-primary-100"
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Sections */}
       <main>
-        {profileSection === "Overview" && <OverviewSection />}
-        {profileSection === "Watchlist" && <Watchlist />}
+        {profileSection === "Overview" && (
+          <>
+            <OverviewSection />
+            <StatsSection />
+            <RecentActivity />
+          </>
+        )}
+
         {profileSection === "Movies" && <MoviesSection />}
         {profileSection === "TV Shows" && <TVShowsSection />}
+        {profileSection === "Watchlist" && <Watchlist />}
       </main>
     </div>
   );

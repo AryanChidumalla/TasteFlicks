@@ -78,3 +78,31 @@ export async function removePreference(userId, mediaId, preference) {
 
   return data;
 }
+
+export async function removeFromWatchlist(userId, mediaId, type) {
+  const { error } = await supabase.from("user_preferences").delete().match({
+    user_id: userId,
+    media_id: mediaId,
+    type: "watchlist",
+    media_type: type,
+  });
+
+  if (error) throw error;
+  return true;
+}
+
+export async function getRecentActivity(userId, limit = 10) {
+  const { data, error } = await supabase
+    .from("user_media_preferences")
+    .select("media_id, preference, media_type, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Error fetching recent activity:", error);
+    return [];
+  }
+
+  return data;
+}

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   getPopularMovies,
   getTrendingMovies,
@@ -7,42 +7,59 @@ import {
   getNowPlayingMovies,
 } from "../movieAPI";
 
-export function usePopularMovies(page = 1) {
-  return useQuery({
-    queryKey: ["popular-movies", page],
-    queryFn: () => getPopularMovies(page),
-    keepPreviousData: true,
+export function usePopularMoviesInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["popular-movies-infinite"],
+    queryFn: ({ pageParam = 1 }) => getPopularMovies(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.currentPage < lastPage.totalPages) {
+        return lastPage.currentPage + 1;
+      }
+      return undefined;
+    },
   });
 }
 
-export function useTrendingMovies(page = 1) {
-  return useQuery({
-    queryKey: ["trending-movies", page],
-    queryFn: () => getTrendingMovies(page),
-    keepPreviousData: true,
+export function useTrendingMoviesInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["trending-movies-infinite"],
+    queryFn: ({ pageParam = 1 }) => getTrendingMovies(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
 }
 
-export function useTopRatedMovies(page = 1) {
-  return useQuery({
-    queryKey: ["top-rated-movies", page],
-    queryFn: () => getTopRatedMovies(page),
-    keepPreviousData: true,
+export function useTopRatedMoviesInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["top-rated-movies-infinite"],
+    queryFn: ({ pageParam = 1 }) => getTopRatedMovies(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
 }
 
-export function useUpcomingMovies(page = 1) {
-  return useQuery({
-    queryKey: ["upcoming-movies", page],
-    queryFn: () => getUpcomingMovies(page),
-    keepPreviousData: true,
+export function useUpcomingMoviesInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["upcoming-movies-infinite"],
+    queryFn: ({ pageParam = 1 }) => getUpcomingMovies(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
 }
 
-export function useNowPlayingMovies(page = 1) {
-  return useQuery({
-    queryKey: ["now-playing-movies", page],
-    queryFn: () => getNowPlayingMovies(page),
-    keepPreviousData: true,
+export function useNowPlayingMoviesInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["now-playing-movies-infinite"],
+    queryFn: ({ pageParam = 1 }) => getNowPlayingMovies(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
   });
 }

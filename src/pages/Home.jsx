@@ -2,11 +2,16 @@ import { ArrowRight, Play, Search, User } from "react-feather";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { usePopularMovies, useTrendingMovies } from "../hooks/useMoviesApi";
-import { usePopularTVShows, useTrendingTVShows } from "../hooks/useTVShowsApi";
+import {
+  usePopularMoviesInfinite,
+  useTrendingMoviesInfinite,
+} from "../hooks/useMoviesApi";
+import {
+  usePopularTVShowsInfinite,
+  useTrendingTVShowsInfinite,
+} from "../hooks/useTVShowsApi"; // ✅ updated to use infinite hooks
 
 import { Black100Button, Black200Button, PrimaryButton } from "../buttons";
-
 import { MovieCard } from "../components/movieCard";
 import TVShowCard from "../components/tvShowCard";
 import { searchMulti } from "../movieAPI";
@@ -14,10 +19,25 @@ import { searchMulti } from "../movieAPI";
 export default function Home() {
   const navigate = useNavigate();
 
-  const { data: popularMoviesData } = usePopularMovies(1);
-  const { data: trendingMoviesData } = useTrendingMovies(1);
-  const { data: popularTVData } = usePopularTVShows(1);
-  const { data: trendingTVData } = useTrendingTVShows(1);
+  // 🎬 Infinite Queries for Movies
+  const { data: popularMoviesData } = usePopularMoviesInfinite();
+  const { data: trendingMoviesData } = useTrendingMoviesInfinite();
+
+  // 📺 Infinite Queries for TV Shows
+  const { data: popularTVData } = usePopularTVShowsInfinite();
+  const { data: trendingTVData } = useTrendingTVShowsInfinite();
+
+  // Flatten movie results
+  const popularMovies =
+    popularMoviesData?.pages.flatMap((page) => page.results) || [];
+  const trendingMovies =
+    trendingMoviesData?.pages.flatMap((page) => page.results) || [];
+
+  // Flatten TV show results
+  const popularTVShows =
+    popularTVData?.pages.flatMap((page) => page.results) || [];
+  const trendingTVShows =
+    trendingTVData?.pages.flatMap((page) => page.results) || [];
 
   return (
     <>
@@ -26,7 +46,7 @@ export default function Home() {
       <Section
         title="Popular Movies"
         subtitle="Most popular movies this week"
-        items={popularMoviesData?.results || []}
+        items={popularMovies}
         type="movie"
         navigateTo="/movies"
         navigate={navigate}
@@ -35,7 +55,7 @@ export default function Home() {
       <Section
         title="Popular TV Shows"
         subtitle="Most popular shows this week"
-        items={popularTVData?.results || []}
+        items={popularTVShows}
         type="tv"
         navigateTo="/tvshows"
         navigate={navigate}
@@ -44,7 +64,7 @@ export default function Home() {
       <Section
         title="Trending Movies"
         subtitle="Most watched movies this week"
-        items={trendingMoviesData?.results || []}
+        items={trendingMovies}
         type="movie"
         navigateTo="/movies"
         navigate={navigate}
@@ -53,7 +73,7 @@ export default function Home() {
       <Section
         title="Trending TV Shows"
         subtitle="Most watched shows this week"
-        items={trendingTVData?.results || []}
+        items={trendingTVShows}
         type="tv"
         navigateTo="/tvshows"
         navigate={navigate}
