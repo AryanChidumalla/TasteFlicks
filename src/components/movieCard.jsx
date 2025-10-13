@@ -15,6 +15,8 @@ export function MovieCard({ item }) {
   const visibleGenres = item.genre_ids.slice(0, maxVisibleGenres);
   const hiddenCount = totalGenres - maxVisibleGenres;
 
+  console.log(item);
+
   return (
     <div
       onClick={() => navigate(`/movie/${item.id}`)}
@@ -31,6 +33,12 @@ export function MovieCard({ item }) {
         <div className="absolute flex gap-2 items-center top-2 left-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
           <div>{item.vote_average.toFixed(1)}</div>
         </div>
+
+        {item.adult && (
+          <div className="absolute flex gap-2 items-center top-2 right-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
+            <div>18+</div>
+          </div>
+        )}
       </div>
 
       <div className="px-5 py-2.5 flex flex-col gap-2.5">

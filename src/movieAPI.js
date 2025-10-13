@@ -15,6 +15,48 @@ export async function getMovieDetails(movieId) {
   }
 }
 
+// --- New: Get Movie Videos (Trailers, Teasers, Clips, etc.) ---
+export async function getMovieVideos(movieId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Failed to fetch movie videos:", error);
+    return [];
+  }
+}
+
+// --- New: Get Movie Credits (Cast & Crew) ---
+export async function getMovieCredits(movieId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    return data || null;
+  } catch (error) {
+    console.error("Failed to fetch movie credits:", error);
+    return null;
+  }
+}
+
+// --- New: Get Watch Providers ---
+export async function getWatchProviders(movieId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/movie/${movieId}/watch/providers?api_key=${API_KEY}`
+    );
+    const data = await response.json();
+    return data.results || null;
+  } catch (error) {
+    console.error("Failed to fetch watch providers:", error);
+    return null;
+  }
+}
+
 // --- TV Show Details ---
 export const getTVShowDetails = async (id) => {
   try {
@@ -28,6 +70,49 @@ export const getTVShowDetails = async (id) => {
     return null;
   }
 };
+
+// --- NEW: Get TV Show Videos (Trailers, Teasers, Clips, etc.) ---
+export async function getTVShowVideos(tvId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}/videos?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Failed to fetch TV show videos:", error);
+    return [];
+  }
+}
+
+// --- NEW: Get TV Show Credits (Cast & Crew) ---
+export async function getTVShowCredits(tvId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}/aggregate_credits?api_key=${API_KEY}&language=en-US`
+    );
+    const data = await response.json();
+    // TMDB uses 'aggregate_credits' for TV for better cast/crew data across seasons
+    return data || null;
+  } catch (error) {
+    console.error("Failed to fetch TV show credits:", error);
+    return null;
+  }
+}
+
+// --- NEW: Get TV Show Watch Providers ---
+export async function getTVWatchProviders(tvId) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/tv/${tvId}/watch/providers?api_key=${API_KEY}`
+    );
+    const data = await response.json();
+    return data.results || null;
+  } catch (error) {
+    console.error("Failed to fetch TV watch providers:", error);
+    return null;
+  }
+}
 
 // --- Search Movies ---
 export const searchMulti = async (query, page = 1) => {

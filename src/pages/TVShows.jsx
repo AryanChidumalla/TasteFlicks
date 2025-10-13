@@ -1,125 +1,51 @@
 import { Calendar, Heart, PlayCircle, Star, TrendingUp } from "react-feather";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  getPopularTVShows,
-  getTopRatedTVShows,
-  getAiringTodayTVShows,
-  getOnTheAirTVShows,
-  getTrendingTVShows,
-} from "../movieAPI";
+  usePopularTVShows,
+  useTopRatedTVShows,
+  useAiringTodayTVShows,
+  useOnTheAirTVShows,
+  useTrendingTVShows,
+} from "../hooks/useTVShowsApi"; // adjust path
 import TVShowCard from "../components/tvShowCard";
 import { Black200Button, PrimaryButton } from "../buttons";
 
 const TVSHOW_CATEGORIES = [
-  { name: "Popular", icon: Heart },
-  { name: "Top Rated", icon: Star },
-  { name: "Airing Today", icon: Calendar },
-  { name: "On The Air", icon: PlayCircle },
-  { name: "Trending", icon: TrendingUp },
+  { name: "Popular", icon: Heart, hook: usePopularTVShows },
+  { name: "Top Rated", icon: Star, hook: useTopRatedTVShows },
+  { name: "Airing Today", icon: Calendar, hook: useAiringTodayTVShows },
+  { name: "On The Air", icon: PlayCircle, hook: useOnTheAirTVShows },
+  { name: "Trending", icon: TrendingUp, hook: useTrendingTVShows },
 ];
 
 export default function TVShows() {
   const [category, setCategory] = useState("Popular");
-
-  const [popular, setPopular] = useState([]);
-  const [topRated, setTopRated] = useState([]);
-  const [airingToday, setAiringToday] = useState([]);
-  const [onTheAir, setOnTheAir] = useState([]);
-  const [trending, setTrending] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [shows, setShows] = useState([]);
 
-  const fetchTVShowsByCategory = (category, page) => {
-    switch (category) {
-      case "Popular":
-        return getPopularTVShows(page);
-      case "Top Rated":
-        return getTopRatedTVShows(page);
-      case "Airing Today":
-        return getAiringTodayTVShows(page);
-      case "On The Air":
-        return getOnTheAirTVShows(page);
-      case "Trending":
-        return getTrendingTVShows(page);
-      default:
-        return Promise.resolve({ results: [] });
-    }
-  };
+  const currentCategory = TVSHOW_CATEGORIES.find((c) => c.name === category);
 
-  // Load first page on category change
+  const { data, isLoading, isFetching } = currentCategory.hook(currentPage);
+
+  // Update shows list when data or page changes
   useEffect(() => {
-    setLoading(true);
+    if (!data || !data.results) return;
+
+    if (currentPage === 1) {
+      // Replace shows on category change or first page
+      setShows(data.results);
+    } else {
+      // Append shows for subsequent pages
+      setShows((prev) => [...prev, ...data.results]);
+    }
+  }, [data, currentPage]);
+
+  const handleCategoryChange = (newCategory) => {
+    if (newCategory === category) return; // no change
+    setCategory(newCategory);
     setCurrentPage(1);
-    fetchTVShowsByCategory(category, 1).then((data) => {
-      const results = Array.isArray(data?.results) ? data.results : [];
-      switch (category) {
-        case "Popular":
-          setPopular(results);
-          break;
-        case "Top Rated":
-          setTopRated(results);
-          break;
-        case "Airing Today":
-          setAiringToday(results);
-          break;
-        case "On The Air":
-          setOnTheAir(results);
-          break;
-        case "Trending":
-          setTrending(results);
-          break;
-      }
-      setLoading(false);
-    });
-  }, [category]);
-
-  // Load more on page change (except page 1)
-  useEffect(() => {
-    if (currentPage === 1) return;
-
-    setLoading(true);
-    fetchTVShowsByCategory(category, currentPage).then((data) => {
-      const results = Array.isArray(data?.results) ? data.results : [];
-      switch (category) {
-        case "Popular":
-          setPopular((prev) => [...prev, ...results]);
-          break;
-        case "Top Rated":
-          setTopRated((prev) => [...prev, ...results]);
-          break;
-        case "Airing Today":
-          setAiringToday((prev) => [...prev, ...results]);
-          break;
-        case "On The Air":
-          setOnTheAir((prev) => [...prev, ...results]);
-          break;
-        case "Trending":
-          setTrending((prev) => [...prev, ...results]);
-          break;
-      }
-      setLoading(false);
-    });
-  }, [currentPage, category]);
-
-  const getCurrentTVShowsList = () => {
-    switch (category) {
-      case "Popular":
-        return popular;
-      case "Top Rated":
-        return topRated;
-      case "Airing Today":
-        return airingToday;
-      case "On The Air":
-        return onTheAir;
-      case "Trending":
-        return trending;
-      default:
-        return [];
-    }
+    setShows([]); // clear shows while loading new category
   };
-
-  const currentTVShows = getCurrentTVShowsList();
 
   const renderButton = ({ name, icon: Icon }) => {
     const ButtonComponent = category === name ? PrimaryButton : Black200Button;
@@ -129,18 +55,15 @@ export default function TVShows() {
         name={name}
         icon={Icon}
         aria-pressed={category === name}
-        onClick={() => setCategory(name)}
+        onClick={() => handleCategoryChange(name)}
       />
     );
   };
 
-  if (loading && currentTVShows.length === 0) {
-    return <div className="text-white-200 text-center p-10">Loading...</div>;
-  }
-
   return (
     <div className="p-6 sm:p-10">
       <div className="flex flex-col gap-6">
+        {/* Heading */}
         <div>
           <h1 className="text-4xl sm:text-5xl font-semibold text-white-100">
             TV Shows
@@ -150,23 +73,35 @@ export default function TVShows() {
           </h2>
         </div>
 
+        {/* Category Buttons */}
         <div className="flex flex-wrap gap-3 sm:gap-5">
           {TVSHOW_CATEGORIES.map(renderButton)}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
-          {currentTVShows.map((show) => (
-            <TVShowCard key={show.id} item={show} />
-          ))}
-        </div>
+        {/* Loading State */}
+        {isLoading && shows.length === 0 ? (
+          <div className="text-white-200 text-center p-10">Loading...</div>
+        ) : (
+          <>
+            {/* Show Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
+              {shows.map((show) => (
+                <TVShowCard key={show.id} item={show} />
+              ))}
+            </div>
 
-        <div className="flex justify-center mt-8">
-          <Black200Button
-            name={loading ? "Loading..." : "Load More"}
-            onClick={() => !loading && setCurrentPage((prev) => prev + 1)}
-            disabled={loading}
-          />
-        </div>
+            {/* Load More Button */}
+            <div className="flex justify-center mt-8">
+              <Black200Button
+                name={isFetching ? "Loading..." : "Load More"}
+                onClick={() => {
+                  if (!isFetching) setCurrentPage((prev) => prev + 1);
+                }}
+                disabled={isFetching}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

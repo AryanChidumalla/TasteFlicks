@@ -1,141 +1,51 @@
 import { Calendar, Heart, PlayCircle, Star, TrendingUp } from "react-feather";
-import { Black200Button, PrimaryButton } from "../buttons";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  getNowPlayingMovies,
-  getPopularMovies,
-  getTopRatedMovies,
-  getTrendingMovies,
-  getUpcomingMovies,
-} from "../movieAPI";
+  usePopularMovies,
+  useTopRatedMovies,
+  useUpcomingMovies,
+  useTrendingMovies,
+  useNowPlayingMovies,
+} from "../hooks/useMoviesApi";
+import { Black200Button, PrimaryButton } from "../buttons";
 import { MovieCard } from "../components/movieCard";
 
 const MOVIE_CATEGORIES = [
-  { name: "Popular", icon: Heart },
-  { name: "Top Rated", icon: Star },
-  { name: "Upcoming Movies", icon: Calendar },
-  { name: "Trending Movies", icon: TrendingUp },
-  { name: "Now Playing", icon: PlayCircle },
+  { name: "Popular", icon: Heart, hook: usePopularMovies },
+  { name: "Top Rated", icon: Star, hook: useTopRatedMovies },
+  { name: "Upcoming Movies", icon: Calendar, hook: useUpcomingMovies },
+  { name: "Trending Movies", icon: TrendingUp, hook: useTrendingMovies },
+  { name: "Now Playing", icon: PlayCircle, hook: useNowPlayingMovies },
 ];
 
 export default function Movies() {
   const [category, setCategory] = useState("Popular");
-
-  const [popularMovies, setPopularMovies] = useState([]);
-  const [topRatedMovies, setTopRatedMovies] = useState([]);
-  const [upcomingMovies, setUpcomingMovies] = useState([]);
-  const [trendingMovies, setTrendingMovies] = useState([]);
-  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [movies, setMovies] = useState([]);
 
-  const fetchMoviesByCategory = (category, page) => {
-    switch (category) {
-      case "Popular":
-        return getPopularMovies(page);
-      case "Top Rated":
-        return getTopRatedMovies(page);
-      case "Upcoming Movies":
-        return getUpcomingMovies(page);
-      case "Trending Movies":
-        return getTrendingMovies(page);
-      case "Now Playing":
-        return getNowPlayingMovies(page);
-      default:
-        return Promise.resolve({ results: [] });
-    }
-  };
+  const currentCategory = MOVIE_CATEGORIES.find((c) => c.name === category);
 
-  // Load movies on category change (reset page)
+  // Destructure the hook for data fetching
+  const { data, isLoading, isFetching } = currentCategory.hook(currentPage);
+
+  // When category or data changes, update movies list accordingly
   useEffect(() => {
-    setLoading(true);
+    if (!data || !data.results) return;
+
+    if (currentPage === 1) {
+      // On category change or first page, replace list
+      setMovies(data.results);
+    } else {
+      // Append results on next pages
+      setMovies((prev) => [...prev, ...data.results]);
+    }
+  }, [data, currentPage]);
+
+  const handleCategoryChange = (newCategory) => {
+    if (newCategory === category) return; // no change
+    setCategory(newCategory);
     setCurrentPage(1);
-
-    fetchMoviesByCategory(category, 1).then((data) => {
-      const results = Array.isArray(data?.results) ? data.results : [];
-
-      switch (category) {
-        case "Popular":
-          setPopularMovies(results);
-          break;
-        case "Top Rated":
-          setTopRatedMovies(results);
-          break;
-        case "Upcoming Movies":
-          setUpcomingMovies(results);
-          break;
-        case "Trending Movies":
-          setTrendingMovies(results);
-          break;
-        case "Now Playing":
-          setNowPlayingMovies(results);
-          break;
-      }
-      setLoading(false);
-    });
-  }, [category]);
-
-  // Load more movies when page increments (except page 1)
-  useEffect(() => {
-    if (currentPage === 1) return;
-
-    setLoading(true);
-
-    fetchMoviesByCategory(category, currentPage).then((data) => {
-      const results = Array.isArray(data?.results) ? data.results : [];
-
-      switch (category) {
-        case "Popular":
-          setPopularMovies((prev) => [...prev, ...results]);
-          break;
-        case "Top Rated":
-          setTopRatedMovies((prev) => [...prev, ...results]);
-          break;
-        case "Upcoming Movies":
-          setUpcomingMovies((prev) => [...prev, ...results]);
-          break;
-        case "Trending Movies":
-          setTrendingMovies((prev) => [...prev, ...results]);
-          break;
-        case "Now Playing":
-          setNowPlayingMovies((prev) => [...prev, ...results]);
-          break;
-      }
-      setLoading(false);
-    });
-  }, [currentPage, category]);
-
-  const getCurrentMoviesList = () => {
-    switch (category) {
-      case "Popular":
-        return popularMovies;
-      case "Top Rated":
-        return topRatedMovies;
-      case "Upcoming Movies":
-        return upcomingMovies;
-      case "Trending Movies":
-        return trendingMovies;
-      case "Now Playing":
-        return nowPlayingMovies;
-      default:
-        return [];
-    }
-  };
-
-  const currentMovies = getCurrentMoviesList();
-
-  const renderButton = ({ name, icon: Icon }) => {
-    const ButtonComponent = category === name ? PrimaryButton : Black200Button;
-    return (
-      <ButtonComponent
-        key={name}
-        name={name}
-        icon={Icon}
-        aria-pressed={category === name}
-        onClick={() => setCategory(name)}
-      />
-    );
+    setMovies([]); // reset movies to avoid showing old data during load
   };
 
   return (
@@ -151,24 +61,38 @@ export default function Movies() {
         </div>
 
         <div className="flex flex-wrap gap-3 sm:gap-5">
-          {MOVIE_CATEGORIES.map(renderButton)}
+          {MOVIE_CATEGORIES.map(({ name, icon }) => {
+            const ButtonComponent =
+              category === name ? PrimaryButton : Black200Button;
+            return (
+              <ButtonComponent
+                key={name}
+                name={name}
+                icon={icon}
+                aria-pressed={category === name}
+                onClick={() => handleCategoryChange(name)}
+              />
+            );
+          })}
         </div>
 
-        {loading && currentMovies.length === 0 ? (
+        {isLoading && movies.length === 0 ? (
           <div className="text-center text-white-200 mt-10">Loading...</div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 justify-center">
-              {currentMovies.map((movie) => (
+              {movies.map((movie) => (
                 <MovieCard key={movie.id} item={movie} />
               ))}
             </div>
 
             <div className="flex justify-center mt-8">
               <Black200Button
-                name={loading ? "Loading..." : "Load More"}
-                onClick={() => !loading && setCurrentPage((prev) => prev + 1)}
-                disabled={loading}
+                name={isFetching ? "Loading..." : "Load More"}
+                onClick={() => {
+                  if (!isFetching) setCurrentPage((prev) => prev + 1);
+                }}
+                disabled={isFetching}
               />
             </div>
           </>
