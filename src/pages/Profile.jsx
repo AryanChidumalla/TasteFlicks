@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ProfileHeader from "../ProfileComponent/ProfileHeader";
 import { useDispatch, useSelector } from "react-redux";
-import { Bookmark, Film, Layers, Tv } from "react-feather";
+import { Bookmark, Film, Layers, Settings, Tv } from "react-feather";
 import { motion } from "framer-motion";
 import OverviewSection from "../ProfileComponent/OverviewSection";
 import Watchlist from "../ProfileComponent/Watchlist";
@@ -12,6 +12,7 @@ import StatsSection from "../ProfileComponent/StatsSection";
 import { getMediaByPreference } from "../supabasePreferences";
 import { setUserData } from "../redux/userSlice";
 import { getMovieDetails, getTVShowDetails } from "../movieAPI";
+import SettingsSection from "../ProfileComponent/Settings";
 
 export default function Profile() {
   const dispatch = useDispatch();
@@ -139,6 +140,7 @@ export default function Profile() {
     { name: "Movies", Icon: Film },
     { name: "TV Shows", Icon: Tv },
     { name: "Watchlist", Icon: Bookmark },
+    { name: "Settings", Icon: Settings },
   ];
 
   return (
@@ -185,6 +187,7 @@ export default function Profile() {
         {profileSection === "Movies" && <MoviesSection />}
         {profileSection === "TV Shows" && <TVShowsSection />}
         {profileSection === "Watchlist" && <Watchlist />}
+        {profileSection === "Settings" && <SettingsSection />}
       </main>
     </div>
   );

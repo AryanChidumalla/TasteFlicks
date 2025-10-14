@@ -23,7 +23,8 @@ function NavBar() {
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Explore", path: "/explore" },
+    { name: "Explore Movies", path: "/exploremovies" },
+    { name: "Explore TV Shows", path: "/exploretvshows" },
     { name: "Movies", path: "/movies" },
     { name: "TV Shows", path: "/tvshows" },
   ];

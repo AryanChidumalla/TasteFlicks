@@ -18,6 +18,8 @@ import Profile from "./pages/Profile";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import NotFound from "./pages/404";
+import Explore from "./pages/Explore";
+import ExploreTVShows from "./pages/ExploreTVShows";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,7 +85,8 @@ function App() {
         <main className="flex-1 m-h-full relative">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<div>Explore</div>} />
+            <Route path="/exploremovies" element={<Explore />} />
+            <Route path="/exploretvshows" element={<ExploreTVShows />} />
             <Route path="/movies" element={<Movies />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/tvshows" element={<TVShows />} />

@@ -359,3 +359,92 @@ export async function getSimilarTVShows(tvId) {
     return [];
   }
 }
+
+export async function getDiscoveredMovies({
+  page = 1,
+  sortBy = "popularity.desc",
+  genre = "",
+  year = "",
+  minRating = "",
+  language = "en-US",
+} = {}) {
+  try {
+    const params = new URLSearchParams({
+      api_key: API_KEY,
+      language,
+      sort_by: sortBy,
+      page,
+    });
+
+    if (genre) params.append("with_genres", genre);
+    if (year) params.append("primary_release_year", year);
+    if (minRating) params.append("vote_average.gte", minRating);
+
+    const response = await fetch(
+      `https://api.themoviedb.org/3/discover/movie?${params.toString()}`
+    );
+
+    if (!response.ok) throw new Error(`TMDB API error: ${response.status}`);
+
+    const data = await response.json();
+    return {
+      results: data.results || [],
+      currentPage: data.page,
+      totalPages: data.total_pages,
+      totalResults: data.total_results,
+    };
+  } catch (error) {
+    console.error("Failed to fetch discovered movies:", error);
+    return {
+      results: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalResults: 0,
+    };
+  }
+}
+
+export async function getDiscoveredTVShows({
+  page = 1,
+  sortBy = "popularity.desc",
+  genre = "",
+  year = "",
+  minRating = "",
+  language = "en-US",
+} = {}) {
+  try {
+    const params = new URLSearchParams({
+      api_key: API_KEY,
+      language,
+      sort_by: sortBy,
+      page,
+    });
+
+    if (genre) params.append("with_genres", genre);
+    // Use first_air_date_year for TV shows
+    if (year) params.append("first_air_date_year", year);
+    if (minRating) params.append("vote_average.gte", minRating);
+
+    const response = await fetch(
+      `https://api.themoviedb.org/3/discover/tv?${params.toString()}`
+    );
+
+    if (!response.ok) throw new Error(`TMDB API error: ${response.status}`);
+
+    const data = await response.json();
+    return {
+      results: data.results || [],
+      currentPage: data.page,
+      totalPages: data.total_pages,
+      totalResults: data.total_results,
+    };
+  } catch (error) {
+    console.error("Failed to fetch discovered TV shows:", error);
+    return {
+      results: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalResults: 0,
+    };
+  }
+}

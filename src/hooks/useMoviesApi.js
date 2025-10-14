@@ -5,6 +5,7 @@ import {
   getTopRatedMovies,
   getUpcomingMovies,
   getNowPlayingMovies,
+  getDiscoveredMovies,
 } from "../movieAPI";
 
 export function usePopularMoviesInfinite() {
@@ -57,6 +58,18 @@ export function useNowPlayingMoviesInfinite() {
   return useInfiniteQuery({
     queryKey: ["now-playing-movies-infinite"],
     queryFn: ({ pageParam = 1 }) => getNowPlayingMovies(pageParam),
+    getNextPageParam: (lastPage) =>
+      lastPage.currentPage < lastPage.totalPages
+        ? lastPage.currentPage + 1
+        : undefined,
+  });
+}
+
+export function useDiscoveredMoviesInfinite(filters = {}) {
+  return useInfiniteQuery({
+    queryKey: ["discovered-movies-infinite", filters],
+    queryFn: ({ pageParam = 1 }) =>
+      getDiscoveredMovies({ ...filters, page: pageParam }),
     getNextPageParam: (lastPage) =>
       lastPage.currentPage < lastPage.totalPages
         ? lastPage.currentPage + 1
