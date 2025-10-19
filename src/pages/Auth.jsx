@@ -46,48 +46,32 @@ function SignIn({ setSignin }) {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    const tempEmail = "aryanchidumalla@gmail.com";
-    const tempPassword = "Ary@n123";
+    if (!email || !password) {
+      toast.error("Please fill in both email and password.");
+      return;
+    }
+
+    setLoading(true);
+
+    console.log("supabase object:", supabase);
+    console.log("supabase.auth:", supabase.auth);
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: tempEmail,
-      password: tempPassword,
+      email,
+      password,
     });
 
+    // console.log("signInWithPassword:", supabase.auth.signInWithPassword);
+
+    setLoading(false);
+
     if (error) {
-      console.error("Sign in error:", error.message);
+      toast.error(`Sign in failed: ${error.message}`);
     } else {
-      console.log("Signed in user:", data.user);
+      toast.success("Signed in successfully!");
+      // You can redirect or update auth state here if needed
     }
   };
-
-  // const handleSignIn = async () => {
-  //   if (!email || !password) {
-  //     toast.error("Please fill in both email and password.");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-
-  //   console.log("supabase object:", supabase);
-  //   console.log("supabase.auth:", supabase.auth);
-
-  //   const { data, error } = await supabase.auth.signInWithPassword({
-  //     email,
-  //     password,
-  //   });
-
-  //   // console.log("signInWithPassword:", supabase.auth.signInWithPassword);
-
-  //   setLoading(false);
-
-  //   if (error) {
-  //     toast.error(`Sign in failed: ${error.message}`);
-  //   } else {
-  //     toast.success("Signed in successfully!");
-  //     // You can redirect or update auth state here if needed
-  //   }
-  // };
 
   return (
     <div className="bg-gradient-to-r from-black-100 via-[#1F1A4D] to-primary-300 absolute top-0 left-0 h-full w-full flex justify-center items-center">
