@@ -1,5 +1,5 @@
-import { Film, Menu, User, X } from "react-feather";
-import { PrimaryButton } from "../buttons";
+import { Film, Menu, Search, User, X } from "react-feather";
+import { Black200Button, PrimaryButton } from "../buttons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { supabase } from "../supabaseClient";
@@ -18,16 +18,28 @@ function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false); // New state for search overlay
   const user = useSelector((state) => state.user.user);
   const isActive = (path) => location.pathname === path;
 
+  const [searchText, setSearchText] = useState("");
+
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "Explore Movies", path: "/exploremovies" },
-    { name: "Explore TV Shows", path: "/exploretvshows" },
     { name: "Movies", path: "/movies" },
     { name: "TV Shows", path: "/tvshows" },
   ];
+
+  // Search handler
+  const handleSearch = () => {
+    const trimmed = searchText.trim();
+    if (trimmed.length > 0) {
+      navigate(`/search?query=${encodeURIComponent(trimmed)}`);
+      setSearchText("");
+      setShowMobileSearch(false); // Close search overlay
+      setShowMenu(false); // Close menu if open
+    }
+  };
 
   return (
     <div className="relative z-50 bg-black-100 border-b border-black-300">
@@ -60,8 +72,29 @@ function NavBar() {
           </div>
         </div>
 
+        {/* 🔎 Desktop Search */}
+        <div className="hidden lg:flex items-center gap-3">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+              className="w-120 bg-black-200 border border-black-300 text-white-100 px-4 py-2 rounded-md focus:outline-none"
+            />
+            <Search
+              className="absolute right-3 top-2.5 text-white-300 cursor-pointer"
+              size={18}
+              onClick={handleSearch}
+            />
+          </div>
+        </div>
+
         {/* Right: Desktop Profile / Sign In */}
-        <div className="hidden md:flex">
+        <div className="hidden lg:flex">
           {user ? (
             <PrimaryButton
               name="Profile"
@@ -77,18 +110,32 @@ function NavBar() {
           )}
         </div>
 
-        {/* Mobile: Hamburger / Close */}
-        <div className="flex md:hidden z-50">
+        {/* Mobile: Hamburger / Search / Close */}
+        <div className="flex lg:hidden items-center gap-2 z-50">
+          {/* Search Icon Button */}
+          <div
+            className="px-2.5 py-2.5 text-white-100 bg-primary-100 rounded cursor-pointer"
+            onClick={() => {
+              setShowMobileSearch(true);
+              setShowMenu(false); // close menu if open
+            }}
+            aria-label="Open search"
+          >
+            <Search size={20} />
+          </div>
+
+          {/* Hamburger Menu */}
           <div
             className="px-2.5 py-2.5 text-white-100 bg-primary-100 rounded cursor-pointer"
             onClick={() => setShowMenu(!showMenu)}
+            aria-label={showMenu ? "Close menu" : "Open menu"}
           >
             {showMenu ? <X size={20} /> : <Menu size={20} />}
           </div>
         </div>
       </div>
 
-      {/* Mobile Backdrop */}
+      {/* Mobile Backdrop for Menu */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ${
           showMenu
@@ -142,6 +189,34 @@ function NavBar() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Search Overlay */}
+      {showMobileSearch && (
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-60 flex flex-col items-end gap-2 justify-start px-6 py-6">
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search..."
+              autoFocus
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
+              className="w-full bg-black-100 border border-black-300 text-white-100 px-4 py-3 rounded-md focus:outline-none text-lg"
+            />
+            <Search
+              className="absolute right-4 top-3.5 text-white-300 cursor-pointer"
+              size={24}
+              onClick={handleSearch}
+            />
+          </div>
+          <Black200Button
+            name="Cancel"
+            onClick={() => setShowMobileSearch(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -9,59 +9,39 @@ export function MovieCard({ item }) {
     return genre ? genre.name : "Unknown";
   };
 
-  const maxVisibleGenres = 2;
-  // const totalGenres = item.genre_ids.length;
-  // const visibleGenres = item.genre_ids.slice(0, maxVisibleGenres);
-  // const hiddenCount = totalGenres - maxVisibleGenres;
-
-  // console.log(item);
-
   return (
     <Link
       to={`/movie/${item.id}`}
-      className="flex flex-col bg-black-200 border border-black-300 text-white-100 rounded w-[200px] hover:scale-105 hover:shadow-lg transition-all cursor-pointer"
+      className="flex flex-col flex-shrink-0 w-[160px] sm:w-[200px] bg-black-200 border border-black-300 text-white-100 rounded cursor-pointer hover:scale-105 hover:shadow-lg transition-all"
     >
-      <div className="relative">
+      {/* Image Container with fixed aspect ratio */}
+      <div
+        className="relative w-full"
+        style={{ aspectRatio: "2 / 3" }} // fixes height based on width
+      >
         <img
           src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
           alt="movie poster"
-          width={200}
-          height={300}
-          className="block"
+          className="object-cover w-full h-full rounded-t"
+          loading="lazy"
         />
-        <div className="absolute flex gap-2 items-center top-2 left-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
+
+        {/* Vote Average Badge */}
+        <div className="absolute flex items-center top-2 left-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
           <div>{item?.vote_average?.toFixed(1)}</div>
         </div>
 
+        {/* Adult Badge */}
         {item.adult && (
-          <div className="absolute flex gap-2 items-center top-2 right-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
+          <div className="absolute flex items-center top-2 right-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
             <div>18+</div>
           </div>
         )}
       </div>
 
-      <div className="px-5 py-2.5 flex flex-col gap-2.5">
-        <div className="font-xl font-semibold truncate">{item.title}</div>
-
-        {/* Uncomment if needed */}
-        {/* <div className="text-sm">{item.release_date.slice(0, 4)}</div> */}
-
-        {/* <div className="flex flex-wrap gap-2">
-          {visibleGenres.map((id) => (
-            <div
-              className="bg-black-100 border border-black-300 rounded-full px-4 py-1 text-sm"
-              key={id}
-            >
-              {getGenreName(id)}
-            </div>
-          ))}
-
-          {hiddenCount > 0 && (
-            <div className="bg-black-100 border border-black-300 rounded-full px-4 py-1 text-sm">
-              +{hiddenCount}
-            </div>
-          )}
-        </div> */}
+      {/* Text Info */}
+      <div className="px-3 py-2 flex flex-col gap-1">
+        <div className="font-semibold text-sm truncate">{item.title}</div>
       </div>
     </Link>
   );

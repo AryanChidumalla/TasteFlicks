@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { searchMovies, searchTVShows } from "../movieAPI";
 import { MovieCard } from "../components/movieCard";
 import { Black200Button, PrimaryButton } from "../buttons";
 import TVShowCard from "../components/tvShowCard";
-import { Search } from "react-feather";
 
 function SearchResults() {
   const location = useLocation();
@@ -19,13 +18,8 @@ function SearchResults() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [searchText, setSearchText] = useState("");
-
-  const navigate = useNavigate();
-
-  //   Unified fetch function based on media type
+  // Unified fetch function based on media type
   const fetchResults = (type, page) => {
-    setSearchText(query);
     switch (type) {
       case "movie":
         return searchMovies(query, page);
@@ -55,7 +49,7 @@ function SearchResults() {
           break;
       }
     });
-  }, [mediaType, query]); // ✅ Now listens to query change too
+  }, [mediaType, query]);
 
   // Effect for loading more pages (page > 1)
   useEffect(() => {
@@ -91,7 +85,7 @@ function SearchResults() {
   const currentResults = getCurrentResults();
 
   if (!currentResults || currentResults.length === 0) {
-    return <div>Loading...</div>;
+    return <div className="text-center text-white-200 mt-10">Loading...</div>;
   }
 
   const renderMediaToggle = (type, label) => {
@@ -117,31 +111,6 @@ function SearchResults() {
           <h1 className="text-5xl font-semibold text-white-100">
             Search Results
           </h1>
-          {/* <h2 className="text-l font-regular text-white-100">
-            Showing results for:{" "}
-            <span className="text-primary-100 font-semibold">{query}</span>
-          </h2> */}
-          <div className="flex bg-black-100 border border-black-300 rounded-md">
-            <input
-              type="text"
-              placeholder="Search for movies or TV shows"
-              className="text-white-100 px-5 py-2.5 w-full bg-black-100 focus:outline-none"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  navigate(`/search?query=${encodeURIComponent(searchText)}`);
-              }}
-            />
-            <Black200Button
-              name="Search"
-              icon={Search}
-              //   onClick={handleSearch}
-              onClick={() =>
-                navigate(`/search?query=${encodeURIComponent(searchText)}`)
-              }
-            />
-          </div>
         </div>
 
         <div className="flex gap-5">

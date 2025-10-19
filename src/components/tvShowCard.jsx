@@ -10,58 +10,26 @@ function TVShowCard({ item }) {
     return genre ? genre.name : "Unknown";
   };
 
-  const maxVisibleGenres = 2;
-  const totalGenres = item.genre_ids.length;
-  const visibleGenres = item.genre_ids.slice(0, maxVisibleGenres);
-  const hiddenCount = totalGenres - maxVisibleGenres;
-
   return (
     <div
       onClick={() => navigate(`/tvshows/${item.id}`)}
-      className="flex flex-col bg-black-200 border border-black-300 text-white-100 rounded w-[200px] hover:scale-105 hover:shadow-lg transition-all cursor-pointer"
+      className="flex flex-col flex-shrink-0 w-[160px] sm:w-[200px] bg-black-200 border border-black-300 text-white-100 rounded cursor-pointer hover:scale-105 hover:shadow-lg transition-all"
     >
-      <div className="relative">
+      <div className="relative w-full" style={{ aspectRatio: "2 / 3" }}>
         <img
           src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
-          alt="movie poster"
-          width={200}
-          height={300}
-          className="block"
+          alt="tv show poster"
+          className="object-cover w-full h-full rounded-t"
+          loading="lazy"
         />
         <div className="absolute flex gap-2 items-center top-2 left-2 bg-black-100 border border-black-300 text-white-100 font-semibold text-sm px-2 py-0.5 rounded">
           <div>{item.vote_average.toFixed(1)}</div>
         </div>
       </div>
 
-      <div className="px-5 py-2.5 flex flex-col gap-2.5">
-        <div className="font-xl font-semibold truncate">{item.name}</div>
-
-        {/* <div className="text-sm">{item.first_air_date.slice(0, 4)}</div> */}
-
-        {/* <div className="flex flex-wrap gap-2">
-          {visibleGenres.map((id) => (
-            <div
-              className="bg-black-100 border border-black-300 rounded-full px-4 py-1 text-sm"
-              key={id}
-            >
-              {getGenreName(id)}
-            </div>
-          ))}
-
-          {hiddenCount > 0 && (
-            <div className="bg-black-100 border border-black-300 rounded-full px-4 py-1 text-sm">
-              +{hiddenCount}
-            </div>
-          )}
-        </div> */}
+      <div className="px-3 py-2 flex flex-col gap-1">
+        <div className="font-semibold text-sm truncate">{item.name}</div>
       </div>
-
-      {/* <div className="p-4">
-        <h3 className="font-semibold truncate">{item.name}</h3>
-        <p className="text-sm text-white-200">
-          {item.first_air_date?.slice(0, 4)}
-        </p>
-      </div> */}
     </div>
   );
 }

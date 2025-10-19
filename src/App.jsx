@@ -20,6 +20,8 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import NotFound from "./pages/404";
 import Explore from "./pages/Explore";
 import ExploreTVShows from "./pages/ExploreTVShows";
+import Recommendations from "./components/Recommend";
+import { getTrendingMedia } from "./movieAPI";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +79,8 @@ function App() {
       listener?.subscription?.unsubscribe();
     };
   }, [dispatch]);
+
+  // return <Recommendations />;
 
   return (
     <QueryClientProvider client={queryClient}>

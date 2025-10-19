@@ -1,6 +1,25 @@
 // --- API Key ---
 export const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
+// --- Getting Trending Movies and TV Shows ---
+export async function getTrendingMedia(page = 1) {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/trending/all/week?api_key=${API_KEY}&page=${page}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch trending media:", error);
+    return null;
+  }
+}
+
 // --- Movie Details ---
 export async function getMovieDetails(movieId) {
   try {

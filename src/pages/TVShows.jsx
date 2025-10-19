@@ -1,20 +1,12 @@
-import {
-  Calendar,
-  Heart,
-  PlayCircle,
-  Star,
-  TrendingUp,
-  Search,
-} from "react-feather";
-import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { Calendar, Heart, PlayCircle, Star, TrendingUp } from "react-feather";
+import { useSearchParams } from "react-router-dom";
 import {
   usePopularTVShowsInfinite,
   useTopRatedTVShowsInfinite,
   useAiringTodayTVShowsInfinite,
   useOnTheAirTVShowsInfinite,
   useTrendingTVShowsInfinite,
-} from "../hooks/useTVShowsApi"; // new hooks file (like movies)
+} from "../hooks/useTVShowsApi";
 import { Black200Button, PrimaryButton } from "../buttons";
 import TVShowCard from "../components/tvShowCard";
 
@@ -28,14 +20,10 @@ const TVSHOW_CATEGORIES = [
 
 export default function TVShows() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-
   const category = searchParams.get("category") || "Popular";
-  const searchText = searchParams.get("query") || "";
 
   const currentCategory = TVSHOW_CATEGORIES.find((c) => c.name === category);
 
-  // 🎬 Infinite Query
   const {
     data,
     fetchNextPage,
@@ -53,18 +41,10 @@ export default function TVShows() {
     refetch();
   };
 
-  const handleSearch = () => {
-    const trimmed = searchText.trim();
-    if (trimmed.length > 0) {
-      setSearchParams({ category, query: trimmed });
-      navigate(`/search?query=${encodeURIComponent(trimmed)}&type=tv`);
-    }
-  };
-
   return (
     <div className="p-6 sm:p-10">
       <div className="flex flex-col gap-6">
-        {/* 🧠 SEARCH BAR */}
+        {/* 📺 PAGE HEADER */}
         <div className="flex flex-col gap-3">
           <h1 className="text-4xl sm:text-5xl font-semibold text-white-100">
             TV Shows
@@ -72,27 +52,6 @@ export default function TVShows() {
           <h2 className="text-base sm:text-lg font-normal text-white-200">
             Discover the latest and trending TV shows across platforms
           </h2>
-
-          <div className="flex bg-black-100 border border-black-300 rounded-md w-full">
-            <input
-              type="text"
-              placeholder="Search for TV shows"
-              className="text-white-100 px-5 py-2.5 w-full bg-black-100 focus:outline-none"
-              value={searchText}
-              onChange={(e) => {
-                const newQuery = e.target.value;
-                setSearchParams({ category, query: newQuery });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSearch();
-              }}
-            />
-            <Black200Button
-              name="Search"
-              icon={Search}
-              onClick={handleSearch}
-            />
-          </div>
         </div>
 
         {/* 🎯 CATEGORY BUTTONS */}
@@ -112,7 +71,7 @@ export default function TVShows() {
           })}
         </div>
 
-        {/* 🎬 TV SHOW LIST */}
+        {/* 📺 TV SHOW LIST */}
         {isLoading ? (
           <div className="text-center text-white-200 mt-10">Loading...</div>
         ) : (
