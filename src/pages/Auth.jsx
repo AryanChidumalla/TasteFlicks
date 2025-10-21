@@ -53,8 +53,8 @@ function SignIn({ setSignin }) {
 
     setLoading(true);
 
-    console.log("supabase object:", supabase);
-    console.log("supabase.auth:", supabase.auth);
+    // console.log("supabase object:", supabase);
+    // console.log("supabase.auth:", supabase.auth);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

@@ -80,8 +80,6 @@ function App() {
     };
   }, [dispatch]);
 
-  // return <Recommendations />;
-
   return (
     <QueryClientProvider client={queryClient}>
       <div className="font-poppins bg-black-100 min-h-screen flex flex-col">
@@ -98,6 +96,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
             <Route path="/signin" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/recommendations" element={<Recommendations />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
