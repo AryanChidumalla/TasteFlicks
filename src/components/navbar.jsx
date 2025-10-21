@@ -44,7 +44,7 @@ function NavBar() {
   return (
     <div className="relative z-50 bg-black-100 border-b border-black-300">
       {/* Navbar Container */}
-      <div className="flex justify-between items-center px-10 py-5">
+      <div className="flex justify-between items-center px-4 sm:px-10 py-5">
         {/* Left: Logo + Desktop Links */}
         <div className="flex items-center gap-10">
           {/* Logo */}

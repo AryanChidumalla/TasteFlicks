@@ -14,6 +14,11 @@ import { Black200Button } from "../buttons";
 import { MovieCard } from "../components/movieCard";
 import TVShowCard from "../components/tvShowCard";
 import HeroSection from "../components/Home/HeroSection";
+import {
+  RecommendedToUser,
+  // useUserRecommendations,
+} from "../components/RecommendByUser";
+import { useEffect } from "react";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,6 +28,14 @@ export default function Home() {
   const { data: trendingMoviesData } = useTrendingMoviesInfinite();
   const { data: popularTVData } = usePopularTVShowsInfinite();
   const { data: trendingTVData } = useTrendingTVShowsInfinite();
+  // const { loading, error, recommendations, getUserRecommendations } =
+  //   useUserRecommendations();
+
+  // useEffect(() => {
+  //   getUserRecommendations();
+  // }, []);
+
+  // console.log(recommendations);
 
   // Flatten paginated results
   const popularMovies =
@@ -37,6 +50,17 @@ export default function Home() {
   return (
     <>
       <HeroSection navigate={navigate} />
+
+      <RecommendedToUser />
+
+      {/* <Section
+        title="Your Recommendations"
+        subtitle="Based on your activity"
+        items={recommendations}
+        type="movie"
+        navigateTo="/movies"
+        navigate={navigate}
+      /> */}
 
       <Section
         title="Popular Movies"
