@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import {
   usePopularMoviesInfinite,
+  useRecommendedMovies,
   useTrendingMoviesInfinite,
 } from "../hooks/useMoviesApi";
 import {
@@ -17,10 +18,13 @@ import HeroSection from "../components/Home/HeroSection";
 import {
   RecommendedToUser,
   // useUserRecommendations,
-} from "../components/RecommendByUser";
+} from "../components/RecommendedToUser";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
 
 export default function Home() {
+  const user = useSelector((state) => state.user.user);
+  const userId = user?.id;
   const navigate = useNavigate();
 
   // Fetch data using infinite queries
@@ -28,14 +32,11 @@ export default function Home() {
   const { data: trendingMoviesData } = useTrendingMoviesInfinite();
   const { data: popularTVData } = usePopularTVShowsInfinite();
   const { data: trendingTVData } = useTrendingTVShowsInfinite();
-  // const { loading, error, recommendations, getUserRecommendations } =
-  //   useUserRecommendations();
-
-  // useEffect(() => {
-  //   getUserRecommendations();
-  // }, []);
-
-  // console.log(recommendations);
+  const {
+    data: recommendations,
+    isLoading,
+    error,
+  } = useRecommendedMovies(userId);
 
   // Flatten paginated results
   const popularMovies =
@@ -51,16 +52,13 @@ export default function Home() {
     <>
       <HeroSection navigate={navigate} />
 
-      <RecommendedToUser />
-
-      {/* <Section
-        title="Your Recommendations"
-        subtitle="Based on your activity"
-        items={recommendations}
-        type="movie"
-        navigateTo="/movies"
-        navigate={navigate}
-      /> */}
+      {userId && (
+        <RecommendedToUser
+          recommendations={recommendations}
+          isLoading={isLoading}
+          error={error}
+        />
+      )}
 
       <Section
         title="Popular Movies"

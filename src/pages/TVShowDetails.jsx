@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getTVShowDetails,
   getTVShowVideos, // New API function
@@ -97,6 +97,8 @@ function TVVideoGallery({ videos }) {
 }
 
 function TVCastSlider({ cast }) {
+  const navigate = useNavigate();
+
   if (!cast || cast.length === 0) return null;
 
   // TV uses Aggregate Credits, so character may be an array, showing the first one
@@ -110,7 +112,8 @@ function TVCastSlider({ cast }) {
           {visibleCast.map((actor) => (
             <div
               key={actor.id}
-              className="min-w-[120px] w-[120px] flex-shrink-0 text-center snap-start"
+              className="min-w-[120px] w-[120px] flex-shrink-0 text-center snap-start cursor-pointer"
+              onClick={() => navigate(`/person/${actor.id}`)}
             >
               {actor.profile_path ? (
                 <img

@@ -467,3 +467,21 @@ export async function getDiscoveredTVShows({
     };
   }
 }
+
+// Get movies a person has acted in
+export const getPersonMovieCredits = async (personId, page = 1) => {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/person/${personId}/movie_credits?api_key=${API_KEY}&page=${page}`
+  );
+  const data = await res.json();
+  return { results: data.cast, person_name: data.name };
+};
+
+// Get TV shows a person has appeared in
+export const getPersonTVCredits = async (personId, page = 1) => {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/person/${personId}/tv_credits?api_key=${API_KEY}&page=${page}`
+  );
+  const data = await res.json();
+  return { results: data.cast, person_name: data.name };
+};

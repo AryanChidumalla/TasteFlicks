@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getMovieDetails,
   getMovieVideos,
@@ -17,6 +17,9 @@ import {
 } from "../supabasePreferences";
 import { useSelector } from "react-redux";
 import { MovieCard } from "../components/movieCard";
+import { generateAndCacheRecommendations } from "../recommendations/recommendationCache";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 // --- Constants ---
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
@@ -97,6 +100,7 @@ function VideoGallery({ videos }) {
 }
 
 function CastSlider({ cast }) {
+  const navigate = useNavigate();
   if (!cast || cast.length === 0) return null;
 
   const visibleCast = cast.slice(0, 15); // Limit the display length
@@ -109,7 +113,8 @@ function CastSlider({ cast }) {
           {visibleCast.map((actor) => (
             <div
               key={actor.id}
-              className="min-w-[120px] w-[120px] flex-shrink-0 text-center snap-start"
+              className="min-w-[120px] w-[120px] flex-shrink-0 text-center snap-start cursor-pointer"
+              onClick={() => navigate(`/person/${actor.id}`)}
             >
               {actor.profile_path ? (
                 <img
@@ -304,6 +309,28 @@ export default function MovieDetails() {
     [userId, id, userPreference, movieDetails]
   );
 
+  const queryClient = useQueryClient();
+
+  const handleButtonClick = async (name) => {
+    try {
+      await handlePreference(name);
+
+      // 🔄 Run in background (non-blocking)
+      generateAndCacheRecommendations(userId)
+        .then(() => {
+          toast.success("Recommendations updated!");
+          queryClient.invalidateQueries(["recommended-movies", userId]);
+        })
+        .catch((err) => {
+          console.error("Recommendation regeneration failed:", err);
+          toast.error("Couldn't update recommendations.");
+        });
+    } catch (err) {
+      console.error("Preference save failed:", err);
+      toast.error("Failed to save preference.");
+    }
+  };
+
   const renderButton = useCallback(
     (name, Icon) => {
       const ButtonComponent =
@@ -315,7 +342,8 @@ export default function MovieDetails() {
           key={name}
           name={displayName}
           icon={Icon}
-          onClick={() => handlePreference(name)}
+          // onClick={() => handlePreference(name)}
+          onClick={() => handleButtonClick(name)}
           disabled={isSaving}
           aria-label={`${displayName} preference button`} // Accessibility
         />

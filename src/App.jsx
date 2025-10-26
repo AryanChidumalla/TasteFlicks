@@ -22,6 +22,8 @@ import Explore from "./pages/Explore";
 import ExploreTVShows from "./pages/ExploreTVShows";
 import Recommendations from "./components/Recommend";
 import { getTrendingMedia } from "./movieAPI";
+import { fetchCachedRecommendations } from "./recommendations/recommendationCache";
+import PersonMedia from "./pages/PersonMedia";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +38,7 @@ const queryClient = new QueryClient({
 function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
+  fetchCachedRecommendations(user?.id);
 
   useEffect(() => {
     // Get session on load
@@ -96,6 +99,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
             <Route path="/signin" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/person/:personId" element={<PersonMedia />} />
             <Route path="/recommendations" element={<Recommendations />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

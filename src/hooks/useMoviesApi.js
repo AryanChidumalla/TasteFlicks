@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getPopularMovies,
   getTrendingMovies,
@@ -7,6 +7,7 @@ import {
   getNowPlayingMovies,
   getDiscoveredMovies,
 } from "../movieAPI";
+import { getCachedRecommendations } from "../recommendations/recommendationCache";
 
 export function usePopularMoviesInfinite() {
   return useInfiniteQuery({
@@ -74,5 +75,13 @@ export function useDiscoveredMoviesInfinite(filters = {}) {
       lastPage.currentPage < lastPage.totalPages
         ? lastPage.currentPage + 1
         : undefined,
+  });
+}
+
+export function useRecommendedMovies(userId) {
+  return useQuery({
+    queryKey: ["recommended-movies", userId],
+    queryFn: () => getCachedRecommendations(userId),
+    enabled: !!userId,
   });
 }
