@@ -1,4 +1,4 @@
-import { Star, Play, Eye, Heart, Bookmark } from "react-feather";
+import { Star, Play, Eye, XSquare, Bookmark } from "react-feather";
 
 /* ---------- Helpers ---------- */
 const formatDate = (date) =>
@@ -28,22 +28,19 @@ export default function HeroSection({
 
   /* actions */
   onWatched,
-  onLike,
+  onNotInterested, // ⚡ Renamed action
   onWatchlist,
 }) {
   const genres = mediaDetails?.genres || [];
-
   const voteAvg = mediaDetails?.vote_average?.toFixed(1);
   const voteCount = mediaDetails?.vote_count;
-
   const releaseDate =
     mediaDetails?.release_date || mediaDetails?.first_air_date;
-
   const formattedDate = formatDate(releaseDate);
 
   /* ---------- SAFE USER STATE ---------- */
   const isWatched = !!userMedia?.watched;
-  const isLiked = !!userMedia?.liked;
+  const isNotInterested = !!userMedia?.not_interested; // ⚡ Adapted to track the hidden state flag
   const isWatchlist = !!userMedia?.watchlist;
 
   const savedRating = userMedia?.rating || 0;
@@ -100,7 +97,6 @@ export default function HeroSection({
               <p className="text-xs uppercase text-white-300 mb-2 tracking-wider">
                 Genres
               </p>
-
               <div className="flex flex-wrap gap-2 text-white-100">
                 {genres.map((g) => (
                   <span
@@ -143,7 +139,7 @@ export default function HeroSection({
 
           {/* ACTIONS */}
           <div className="space-y-6">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center gap-2">
               {/* Watched */}
               <button
                 onClick={onWatched}
@@ -152,18 +148,22 @@ export default function HeroSection({
                 }`}
               >
                 <Eye size={30} />
-                <span className="text-xs">Watched</span>
+                <span className="text-xs mt-1">Watched</span>
               </button>
 
-              {/* Like */}
+              {/* Not Interested ⚡ */}
               <button
-                onClick={onLike}
+                onClick={onNotInterested}
                 className={`flex flex-col items-center cursor-pointer transition hover:scale-105 ${
-                  isLiked ? "text-primary-100" : "text-white-300"
+                  isNotInterested
+                    ? "text-red-500"
+                    : "text-white-300 hover:text-red-400"
                 }`}
               >
-                <Heart size={30} />
-                <span className="text-xs">Like</span>
+                <XSquare size={30} />
+                <span className="text-xs mt-1 whitespace-nowrap">
+                  Not for Me
+                </span>
               </button>
 
               {/* Watchlist */}
@@ -174,16 +174,16 @@ export default function HeroSection({
                 }`}
               >
                 <Bookmark size={30} />
-                <span className="text-xs">Watchlist</span>
+                <span className="text-xs mt-1">Watchlist</span>
               </button>
 
-              {/* Trailer (optional) */}
+              {/* Trailer */}
               {trailerKey && (
                 <a
                   href={`https://www.youtube.com/watch?v=${trailerKey}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-white-300 hover:text-blue-400 flex items-center gap-1"
+                  className="text-white-300 hover:text-blue-400 flex items-center gap-1 text-xs"
                 >
                   <Play size={14} /> Trailer
                 </a>
@@ -194,17 +194,13 @@ export default function HeroSection({
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => {
                 const fullValue = star * 2;
-
                 return (
                   <div
                     key={star}
-                    className="relative w-9 h-9 cursor-pointer" // 36px = w-9 h-9
+                    className="relative w-9 h-9 cursor-pointer"
                     onMouseLeave={() => setHover(0)}
                   >
-                    {/* empty star */}
                     <Star size={36} className="text-gray-500 fill-gray-500" />
-
-                    {/* filled layer */}
                     <div
                       className="absolute top-0 left-0 overflow-hidden h-full"
                       style={{
@@ -221,15 +217,11 @@ export default function HeroSection({
                         className="text-primary-100 fill-primary-100"
                       />
                     </div>
-
-                    {/* left half */}
                     <div
                       className="absolute left-0 top-0 w-1/2 h-full"
                       onMouseEnter={() => setHover(fullValue - 1)}
                       onClick={() => setRating(fullValue - 1)}
                     />
-
-                    {/* right half */}
                     <div
                       className="absolute right-0 top-0 w-1/2 h-full"
                       onMouseEnter={() => setHover(fullValue)}

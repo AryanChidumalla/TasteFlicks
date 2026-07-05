@@ -182,6 +182,9 @@ export default function MediaDetails() {
         userMedia={userMedia}
         onWatched={() => updatePreference({ watched: !userMedia.watched })}
         onLike={() => updatePreference({ liked: !userMedia.liked })}
+        onNotInterested={() =>
+          updatePreference({ not_interested: !userMedia?.not_interested })
+        }
         onWatchlist={() =>
           updatePreference({ watchlist: !userMedia.watchlist })
         }

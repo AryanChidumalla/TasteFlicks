@@ -1,8 +1,5 @@
 import axios from "axios";
-import {
-  getMediaByPreference,
-  getMovieRatings,
-} from "../../services/supabase/preferences";
+import { getMovieRatings } from "../../services/supabase/preferences";
 import { getMovieDetails } from "../../services/tmdb/api";
 
 export async function getUserRecommendations(userId) {
@@ -12,46 +9,37 @@ export async function getUserRecommendations(userId) {
   }
 
   try {
-    // 1. Inspect Supabase raw outputs
-    const [likedIds, dislikedIds] = await Promise.all([
-      getMediaByPreference(userId, "like", "movie"),
-      getMediaByPreference(userId, "dislike", "movie"),
-    ]);
-
+    // 1. Fetch unified ratings and not_interested states from Supabase
     const ratings = await getMovieRatings(userId);
 
-    console.log("📊 Supabase Preference Hydration Logs:", {
-      likedIds,
-      dislikedIds,
-    });
+    console.log("📊 Supabase Preference Hydration Logs:", ratings);
 
-    // Stop early if no likes/dislikes exist yet
-    if (!likedIds.length && !dislikedIds.length) {
+    // Stop early only if there is absolutely zero user history
+    if (!ratings || ratings.length === 0) {
       console.warn(
-        "⚠️ Early exit triggered: Both likedIds and dislikedIds collections are empty.",
+        "⚠️ Early exit triggered: User has no recorded movie preferences.",
       );
       return [];
     }
 
-    // 2. Fetch from the recommendations microservice
-    console.log(
-      "⚙️ Querying AI model engine at:",
-      `${import.meta.env.VITE_API_BASE_URL}/recommend/by_user`,
-    );
+    // 2. Format the payload array for your Python FastAPI backend schema
+    const formattedRatings = ratings.map((movie) => ({
+      id: movie.media_id,
+      rating: movie.rating != null ? movie.rating : 0.0, // Fallback default
+      not_interested: !!movie.not_interested, // Explicit boolean flag
+    }));
 
-    const formattedRatings = ratings
-      .filter((movie) => movie.rating != null)
-      .map((movie) => ({
-        id: movie.media_id,
-        rating: movie.rating,
-      }));
+    // Clean up any potential double slashes dynamically
+    const targetUrl =
+      `${import.meta.env.VITE_API_BASE_URL}/recommend/by_user`.replace(
+        /([^:]\/)\/+/g,
+        "$1",
+      );
+    console.log("⚙️ Querying AI model engine at:", targetUrl);
 
-    const res = await axios.post(
-      `${import.meta.env.VITE_API_BASE_URL}/recommend/by_user`,
-      {
-        ratings: formattedRatings,
-      },
-    );
+    const res = await axios.post(targetUrl, {
+      ratings: formattedRatings,
+    });
 
     console.log("🤖 AI Vector Response Payload Received:", res.data);
 

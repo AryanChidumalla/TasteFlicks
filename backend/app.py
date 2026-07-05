@@ -19,6 +19,7 @@ app = FastAPI(
 class MovieRating(BaseModel):
     id: int
     rating: float
+    not_interested: bool = False # ⚡ Add this new optional flag
 
 class RecommendationRequest(BaseModel):
     ratings: list[MovieRating]
@@ -124,15 +125,22 @@ def recommend_by_user(request: RecommendationRequest):
     indices = []
     ratings = []
 
-    for movie in request.ratings:
-        idx = id_to_index.get(movie.id)
+    excluded_ids = set()
 
+    for movie in request.ratings:
+        # Add to absolute exclusion set if explicitly flagged or low rated
+        if movie.not_interested:
+            print(movie.id)
+            excluded_ids.add(movie.id)
+            continue
+            
+        idx = id_to_index.get(movie.id)
         if idx is None:
-            print(f"Movie {movie.id} not found in dataset")
             continue
 
         indices.append(idx)
         ratings.append(movie.rating)
+        excluded_ids.add(movie.id) # Also exclude already rated items
 
     print(f"Using {len(indices)} of {len(request.ratings)} rated movies.")
 
@@ -191,11 +199,6 @@ def recommend_by_user(request: RecommendationRequest):
         0.7 * movies_copy["similarity"] +
         0.3 * normalized_rating
     )
-
-    excluded_ids = {
-        movie.id
-        for movie in request.ratings
-    }
 
     recommendations_df = movies_copy[
         ~movies_copy["id"].isin(excluded_ids)
