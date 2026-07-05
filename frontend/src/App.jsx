@@ -19,7 +19,7 @@ import TVShows from "./pages/TVShows";
 import MediaDetails from "./pages/details/MediaDetails";
 import SearchResults from "./pages/SearchResults";
 import Profile from "./pages/profile/Profile";
-// import PersonMedia from "./pages/details/PersonMedia";
+import PersonMedia from "./pages/PersonMedia";
 // import Recommendations from "./pages/recommendations/Recommend";
 import NotFound from "./pages/404";
 import Auth from "./pages/Auth";
@@ -103,7 +103,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
             <Route path="/signin" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
-            {/* <Route path="/person/:personId" element={<PersonMedia />} /> */}
+            <Route path="/person/:personId" element={<PersonMedia />} />
             {/* <Route path="/recommendations" element={<Recommendations />} /> */}
             <Route path="*" element={<NotFound />} />
           </Routes>
