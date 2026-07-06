@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Star, Check } from "react-feather"; // ⚡ Added Check icon
+import { Star, Check, Bookmark, X } from "react-feather"; // ⚡ Added Check icon
 import { useGenres } from "../../services/tmdb/api";
 import { useSelector } from "react-redux";
 
@@ -7,19 +7,15 @@ export function MediaCard({ item }) {
   const genres = useGenres();
   const watchedMovies = useSelector((state) => state.mediaPreference.movies);
   const watchedTv = useSelector((state) => state.mediaPreference.tv);
-
-  // ⚡ 1. Determine mediaType FIRST to prevent "Cannot access 'mediaType' before initialization" crash
   const mediaType = item.media_type || (item.title ? "movie" : "tv");
-
-  // ⚡ 2. Safely look up the watch status
-  const mediaWatched =
+  const media =
     mediaType === "movie"
-      ? watchedMovies.some(
-          (movie) => movie.media_id === item.id && movie.rating != null,
-        )
-      : watchedTv.some(
-          (show) => show.media_id === item.id && show.rating != null,
-        );
+      ? watchedMovies.find((movie) => movie.media_id === item.id)
+      : watchedTv.find((show) => show.media_id === item.id);
+
+  const watched = media?.rating != null;
+  const watchlist = media?.watchlist === true;
+  const notInterested = media?.not_interested === true;
 
   const getGenreName = (id) => {
     const genre = genres.find((g) => g.id === id);
@@ -32,6 +28,14 @@ export function MediaCard({ item }) {
     : item.first_air_date
       ? item.first_air_date.slice(0, 4)
       : "—";
+
+  const borderClass = watched
+    ? "border-2 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+    : watchlist
+      ? "border-2 border-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
+      : notInterested
+        ? "border-2 border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+        : "border border-black-300";
 
   return (
     <Link
@@ -48,21 +52,25 @@ export function MediaCard({ item }) {
           }
           alt={title || "media poster"}
           // ⚡ Dynamic border color conditional check (turns green and glows if watched)
-          className={`object-cover w-full h-full rounded-lg transition duration-300 ${
-            mediaWatched
-              ? "border-2 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
-              : "border border-black-300"
-          }`}
+          className={`object-cover w-full h-full rounded-lg transition duration-300 ${borderClass}`}
           loading="lazy"
         />
 
-        {/* ⚡ Watched Indicator Overlay (Top Left) */}
-        {mediaWatched && (
-          <div
-            className="absolute top-2 left-2 bg-emerald-500 text-black border border-emerald-400 p-1 rounded-md shadow-lg flex items-center justify-center"
-            title="Watched"
-          >
-            <Check size={14} strokeWidth={3} className="text-black" />
+        {watched && (
+          <div className="absolute top-2 left-2 bg-emerald-500 p-1 rounded-md">
+            <Check size={14} className="text-black" />
+          </div>
+        )}
+
+        {!watched && watchlist && (
+          <div className="absolute top-2 left-2 bg-blue-500 p-1 rounded-md">
+            <Bookmark size={14} className="text-white" />
+          </div>
+        )}
+
+        {!watched && !watchlist && notInterested && (
+          <div className="absolute top-2 left-2 bg-red-500 p-1 rounded-md">
+            <X size={14} className="text-white" />
           </div>
         )}
 
