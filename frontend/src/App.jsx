@@ -10,6 +10,7 @@ import NavBar from "./components/layout/navbar";
 import Footer from "./components/layout/footer";
 import { supabase } from "./services/supabase/client";
 import { clearUser, setUser } from "./redux/userSlice";
+import { setMovies, setTv } from "./redux/mediaPreferenceSlice";
 import { fetchCachedRecommendations } from "./pages/recommendations/recommendationCache";
 
 // Pages
@@ -23,6 +24,7 @@ import PersonMedia from "./pages/PersonMedia";
 // import Recommendations from "./pages/recommendations/Recommend";
 import NotFound from "./pages/404";
 import Auth from "./pages/Auth";
+import { getMediaByPreference } from "./services/supabase/preferences";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,6 +49,15 @@ function App() {
   useEffect(() => {
     if (user?.id) {
       fetchCachedRecommendations(user.id);
+      const storeMediaPreferences = async () => {
+        const movies = await getMediaByPreference(user.id, "movie");
+        const tv = await getMediaByPreference(user.id, "tv");
+        dispatch(setMovies(movies));
+        dispatch(setTv(tv));
+        // console.log(movies);
+      };
+
+      storeMediaPreferences();
     }
   }, [user?.id]);
 

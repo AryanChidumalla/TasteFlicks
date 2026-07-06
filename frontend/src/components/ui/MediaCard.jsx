@@ -1,25 +1,37 @@
 import { Link } from "react-router-dom";
-import { Star } from "react-feather";
+import { Star, Check } from "react-feather"; // ⚡ Added Check icon
 import { useGenres } from "../../services/tmdb/api";
+import { useSelector } from "react-redux";
 
 export function MediaCard({ item }) {
   const genres = useGenres();
+  const watchedMovies = useSelector((state) => state.mediaPreference.movies);
+  const watchedTv = useSelector((state) => state.mediaPreference.tv);
+
+  // ⚡ 1. Determine mediaType FIRST to prevent "Cannot access 'mediaType' before initialization" crash
+  const mediaType = item.media_type || (item.title ? "movie" : "tv");
+
+  // ⚡ 2. Safely look up the watch status
+  const mediaWatched =
+    mediaType === "movie"
+      ? watchedMovies.some(
+          (movie) => movie.media_id === item.id && movie.rating != null,
+        )
+      : watchedTv.some(
+          (show) => show.media_id === item.id && show.rating != null,
+        );
 
   const getGenreName = (id) => {
     const genre = genres.find((g) => g.id === id);
     return genre ? genre.name : null;
   };
 
-  // Helper to get the correct title and year
   const title = item.title || item.name;
   const year = item.release_date
     ? item.release_date.slice(0, 4)
     : item.first_air_date
       ? item.first_air_date.slice(0, 4)
       : "—";
-
-  // Determine if it's a movie or TV show based on media_type
-  const mediaType = item.media_type || (item.title ? "movie" : "tv");
 
   return (
     <Link
@@ -35,9 +47,24 @@ export function MediaCard({ item }) {
               : "/fallback.jpg"
           }
           alt={title || "media poster"}
-          className="object-cover w-full h-full rounded-lg border border-black-300"
+          // ⚡ Dynamic border color conditional check (turns green and glows if watched)
+          className={`object-cover w-full h-full rounded-lg transition duration-300 ${
+            mediaWatched
+              ? "border-2 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.2)]"
+              : "border border-black-300"
+          }`}
           loading="lazy"
         />
+
+        {/* ⚡ Watched Indicator Overlay (Top Left) */}
+        {mediaWatched && (
+          <div
+            className="absolute top-2 left-2 bg-emerald-500 text-black border border-emerald-400 p-1 rounded-md shadow-lg flex items-center justify-center"
+            title="Watched"
+          >
+            <Check size={14} strokeWidth={3} className="text-black" />
+          </div>
+        )}
 
         {/* Adult Badge */}
         {item.adult && (
@@ -49,30 +76,19 @@ export function MediaCard({ item }) {
 
       {/* Info */}
       <div className="py-3 flex flex-col gap-1">
-        {/* Title */}
         <div className="font-semibold text-sm truncate">{title}</div>
 
-        {/* Meta */}
         <div className="flex items-center gap-2 text-tiny text-gray-300">
-          {/* Rating */}
           <div className="flex items-center gap-1">
             <Star className="w-[12px] h-[12px] text-primary-100" />
             <span>
               {item?.vote_average ? item.vote_average.toFixed(1) : "NR"}
             </span>
           </div>
-
           <span>•</span>
-
-          {/* Year */}
           <div>{year}</div>
-
-          {/* <span>•</span>
-
-          <div>{item.media_type === "movie" ? "Movie" : "TV Show"}</div> */}
         </div>
 
-        {/* Optional Genres */}
         <div className="text-[0.75rem] text-gray-500 truncate">
           {item.genre_ids
             ?.slice(0, 2)

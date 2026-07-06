@@ -25,30 +25,30 @@ export async function getUserPreference(userId, mediaId) {
   return data || null;
 }
 
-export async function getMediaByPreference(userId, preference, mediaType) {
+export async function getMediaByPreference(userId, mediaType) {
   let query = supabase
     .from("user_media_preferences")
-    .select("media_id")
+    .select("media_id, rating, watchlist, not_interested")
     .eq("user_id", userId)
     .eq("media_type", mediaType);
 
-  if (preference === "like") {
-    query = query.gte("rating", 7);
-  } else if (preference === "dislike") {
-    query = query.lte("rating", 4);
-  } else if (preference === "not_interested") {
-    // ⚡ Separate query handler to fetch explicit exclusion sets
-    query = query.eq("not_interested", true);
-  } else {
-    return [];
-  }
+  // if (preference === "like") {
+  //   query = query.gte("rating", 7);
+  // } else if (preference === "dislike") {
+  //   query = query.lte("rating", 4);
+  // } else if (preference === "not_interested") {
+  //   // ⚡ Separate query handler to fetch explicit exclusion sets
+  //   query = query.eq("not_interested", true);
+  // } else {
+  //   return [];
+  // }
 
   const { data, error } = await query;
   if (error) {
     console.error(`Error fetching media by preference (${preference}):`, error);
     return [];
   }
-  return data ? data.map((item) => item.media_id) : [];
+  return data;
 }
 
 export async function getMovieRatings(userId) {
