@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Film, Menu, Search, User, X } from "react-feather";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useAuth } from "../../hooks/useAuth";
 
 function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useSelector((state) => state.user.user);
+  const { user } = useAuth();
 
   const [showMenu, setShowMenu] = useState(false);
   const [searchText, setSearchText] = useState("");

@@ -27,7 +27,9 @@ export default function SearchResults() {
       initialPageParam: 1,
       enabled: !!query,
       getNextPageParam: (lastPage) =>
-        lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+        lastPage?.currentPage < lastPage?.totalPages
+          ? lastPage.currentPage + 1
+          : undefined,
     });
 
   const allItems = data?.pages.flatMap((page) => page.results) || [];

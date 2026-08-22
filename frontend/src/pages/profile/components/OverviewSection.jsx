@@ -1,11 +1,10 @@
 import React, { useMemo } from "react";
-import { useSelector } from "react-redux";
+import { useAuth } from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { getRecentActivity } from "../../../services/supabase/preferences";
 import { getMovieDetails, getTVShowDetails } from "../../../services/tmdb/api";
-import MediaCard from "./MediaCard";
 
 const COLORS = ["#a855f7", "#3b82f6", "#10b981", "#f59e0b", "#ec4899"];
 
@@ -14,7 +13,6 @@ export default function OverviewSection({
   tv,
   watchlistMovies,
   watchlistTV,
-  isLoading,
 }) {
   const { activityMap, currentStreak, totalActiveDays } = useMemo(() => {
     const counts = {};
@@ -277,7 +275,7 @@ function MinimalChartBlock({ title, data }) {
 }
 
 function RecentActivitySection() {
-  const user = useSelector((state) => state.user.user);
+  const { user } = useAuth();
   const userId = user?.id;
   const navigate = useNavigate();
 

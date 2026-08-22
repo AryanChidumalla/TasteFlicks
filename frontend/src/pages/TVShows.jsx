@@ -1,22 +1,23 @@
 import React from "react";
 import { Calendar, Heart, PlayCircle, Star, TrendingUp } from "react-feather";
 import { useSearchParams } from "react-router-dom";
+import { useInfiniteMedia } from "../hooks/useMediaQueries";
 import {
-  usePopularTVShowsInfinite,
-  useTopRatedTVShowsInfinite,
-  useAiringTodayTVShowsInfinite,
-  useOnTheAirTVShowsInfinite,
-  useTrendingTVShowsInfinite,
-} from "../hooks/useMediaQueries";
+  getPopularTVShows,
+  getTopRatedTVShows,
+  getAiringTodayTVShows,
+  getOnTheAirTVShows,
+  getTrendingTVShows,
+} from "../services/tmdb/api";
 import { Black200Button, PrimaryButton } from "../components/ui/buttons";
 import { MediaCard } from "../components/ui/MediaCard";
 
 const TVSHOW_CATEGORIES = [
-  { name: "Popular", icon: Heart, hook: usePopularTVShowsInfinite },
-  { name: "Top Rated", icon: Star, hook: useTopRatedTVShowsInfinite },
-  { name: "Airing Today", icon: Calendar, hook: useAiringTodayTVShowsInfinite },
-  { name: "On The Air", icon: PlayCircle, hook: useOnTheAirTVShowsInfinite },
-  { name: "Trending", icon: TrendingUp, hook: useTrendingTVShowsInfinite },
+  { name: "Popular", icon: Heart, apiFn: getPopularTVShows, key: "popular" },
+  { name: "Top Rated", icon: Star, apiFn: getTopRatedTVShows, key: "top_rated" },
+  { name: "Airing Today", icon: Calendar, apiFn: getAiringTodayTVShows, key: "airing_today" },
+  { name: "On The Air", icon: PlayCircle, apiFn: getOnTheAirTVShows, key: "on_the_air" },
+  { name: "Trending", icon: TrendingUp, apiFn: getTrendingTVShows, key: "trending" },
 ];
 
 export default function TVShows() {
@@ -27,7 +28,10 @@ export default function TVShows() {
     TVSHOW_CATEGORIES.find((c) => c.name === category) || TVSHOW_CATEGORIES[0];
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    currentCategory.hook();
+    useInfiniteMedia(
+      [`tvshows-infinite-${currentCategory.key}`],
+      currentCategory.apiFn,
+    );
 
   const shows = data?.pages.flatMap((page) => page.results) || [];
 

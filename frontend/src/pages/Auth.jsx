@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Key, Mail, User } from "react-feather";
 import { supabase } from "../services/supabase/client";
 import { toast } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { White100Button } from "../components/ui/buttons";
 
@@ -31,7 +31,7 @@ function BaseInput({ Icon, Label, ...props }) {
 
 export default function Auth() {
   const [signIn, setSignin] = useState(true);
-  const user = useSelector((state) => state.user.user);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

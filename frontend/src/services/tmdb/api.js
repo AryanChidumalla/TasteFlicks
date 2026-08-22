@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 export const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
+
+// In-memory cache for media details to eliminate N+1 fetches
+const mediaDetailsCache = new Map();
 
 // --- Shared Base Fetch Helper ---
 const tmdbFetch = async (endpoint, params = {}, fallbackValue = null) => {
@@ -37,22 +40,47 @@ const fetchPaginatedMedia = async (endpoint, page = 1, extraParams = {}) => {
 // --- Media Information ---
 export const getTrendingMedia = (page = 1) =>
   fetchPaginatedMedia("trending/all/week", page);
-export const getMovieDetails = (movieId) =>
-  tmdbFetch(`movie/${movieId}`, { language: "en-US" });
+
+export const getMovieDetails = async (movieId) => {
+  const cacheKey = `movie_${movieId}`;
+  if (mediaDetailsCache.has(cacheKey)) {
+    return mediaDetailsCache.get(cacheKey);
+  }
+  const data = await tmdbFetch(`movie/${movieId}`, { language: "en-US" });
+  if (data) {
+    mediaDetailsCache.set(cacheKey, data);
+  }
+  return data;
+};
+
 export const getMovieVideos = async (movieId) =>
   (await tmdbFetch(`movie/${movieId}/videos`, { language: "en-US" }))
     ?.results || [];
+
 export const getMovieCredits = (movieId) =>
   tmdbFetch(`movie/${movieId}/credits`, { language: "en-US" });
+
 export const getWatchProviders = async (movieId) =>
   (await tmdbFetch(`movie/${movieId}/watch/providers`))?.results || null;
 
-export const getTVShowDetails = (id) =>
-  tmdbFetch(`tv/${id}`, { language: "en-US" });
+export const getTVShowDetails = async (id) => {
+  const cacheKey = `tv_${id}`;
+  if (mediaDetailsCache.has(cacheKey)) {
+    return mediaDetailsCache.get(cacheKey);
+  }
+  const data = await tmdbFetch(`tv/${id}`, { language: "en-US" });
+  if (data) {
+    mediaDetailsCache.set(cacheKey, data);
+  }
+  return data;
+};
+
 export const getTVShowVideos = async (tvId) =>
   (await tmdbFetch(`tv/${tvId}/videos`, { language: "en-US" }))?.results || [];
+
 export const getTVShowCredits = (tvId) =>
   tmdbFetch(`tv/${tvId}/aggregate_credits`, { language: "en-US" });
+
 export const getTVWatchProviders = async (tvId) =>
   (await tmdbFetch(`tv/${tvId}/watch/providers`))?.results || null;
 
@@ -189,11 +217,22 @@ export const getPersonTVCredits = async (personId, page = 1) => {
 
 // --- Custom Hooks ---
 export function useGenres() {
-  const [genres, setGenres] = useState([]);
-  useEffect(() => {
-    tmdbFetch("genre/movie/list").then(
-      (data) => data && setGenres(data.genres),
-    );
-  }, []);
+  const { data: genres = [] } = useQuery({
+    queryKey: ["tmdbGenres"],
+    queryFn: async () => {
+      const [movieData, tvData] = await Promise.all([
+        tmdbFetch("genre/movie/list"),
+        tmdbFetch("genre/tv/list"),
+      ]);
+
+      const genreMap = new Map();
+      (movieData?.genres || []).forEach((g) => genreMap.set(g.id, g));
+      (tvData?.genres || []).forEach((g) => genreMap.set(g.id, g));
+      return Array.from(genreMap.values());
+    },
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+
   return genres;
 }

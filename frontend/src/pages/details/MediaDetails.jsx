@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Star, Video, Award, Users } from "react-feather";
-import { supabase } from "../../services/supabase/client";
-import {
-  getUserMedia,
-  updateUserMedia,
-} from "../../services/supabase/userMedia";
-import { upsertMediaItem } from "../../services/supabase/preferences";
+import { useAuth } from "../../hooks/useAuth";
+import { useUpdateMediaPreference } from "../../hooks/useUserPreferences";
+import { getUserMedia } from "../../services/supabase/userMedia";
 
 import {
   getMovieDetails,
@@ -31,10 +28,10 @@ import RelatedMedia from "./tabs/RelatedMedia";
 
 export default function MediaDetails() {
   const { id, type } = useParams();
-  const navigate = useNavigate();
   const isTV = type === "tv";
+  const { user } = useAuth();
+  const updatePreferenceMutation = useUpdateMediaPreference();
 
-  const [user, setUser] = useState(null);
   const [status, setStatus] = useState("loading");
   const [mediaDetails, setMediaDetails] = useState(null);
   const [videos, setVideos] = useState([]);
@@ -49,6 +46,7 @@ export default function MediaDetails() {
     watched: false,
     liked: false,
     watchlist: false,
+    not_interested: false,
     rating: 0,
   });
 
@@ -56,19 +54,19 @@ export default function MediaDetails() {
 
   /* ---------------- DATA ACQUISITION STACK ---------------- */
   useEffect(() => {
+    let isCancelled = false;
+
     const loadMediaAndUserCtx = async () => {
       setStatus("loading");
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        const activeUser = auth?.user;
-        if (activeUser) {
-          setUser(activeUser);
-          const userData = await getUserMedia(activeUser.id, id);
-          if (userData) {
+        if (user?.id) {
+          const userData = await getUserMedia(user.id, id);
+          if (userData && !isCancelled) {
             setUserMedia({
               watched: userData.watched || false,
               liked: userData.liked || false,
               watchlist: userData.watchlist || false,
+              not_interested: userData.not_interested || false,
               rating: userData.rating || 0,
             });
             setRating(userData.rating || 0);
@@ -84,6 +82,8 @@ export default function MediaDetails() {
           isTV ? getTVWatchProviders(id) : getWatchProviders(id),
           isTV ? getTVReviews(id) : getMovieReviews(id),
         ]);
+
+        if (isCancelled) return;
 
         setMediaDetails(payloads[0]);
         setVideos(payloads[1]);
@@ -102,35 +102,31 @@ export default function MediaDetails() {
         setStatus("success");
       } catch (err) {
         console.error("Failed compiling asset details map:", err);
-        setStatus("error");
+        if (!isCancelled) setStatus("error");
       }
     };
 
     loadMediaAndUserCtx();
-  }, [id, type, isTV]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [id, type, isTV, user?.id]);
 
   /* ---------------- BACKEND TRANSACTION ACTION WORKFLOWS ---------------- */
-  const ensureMediaExists = async () => {
-    if (!mediaDetails) return;
-    await upsertMediaItem({
-      id: mediaDetails.id,
-      title: mediaDetails.title || mediaDetails.name,
-      media_type: type,
-      poster_path: mediaDetails.poster_path,
-      release_date: mediaDetails.release_date || mediaDetails.first_air_date,
-    });
-  };
-
   const updatePreference = async (updates) => {
     if (!user) return;
-    await ensureMediaExists();
-    const updated = await updateUserMedia({
-      userId: user.id,
-      mediaId: id,
-      mediaType: type,
-      updates,
-    });
-    if (updated) setUserMedia(updated);
+    setUserMedia((prev) => ({ ...prev, ...updates }));
+    try {
+      await updatePreferenceMutation.mutateAsync({
+        mediaId: id,
+        mediaType: type,
+        updates,
+        mediaDetails,
+      });
+    } catch (err) {
+      console.error("Error updating media preference:", err);
+    }
   };
 
   if (status === "loading") {
@@ -165,6 +161,13 @@ export default function MediaDetails() {
       )
       .slice(0, 2) || [];
 
+  const trailer =
+    videos?.find(
+      (v) =>
+        v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"),
+    ) || videos?.find((v) => v.site === "YouTube") || videos?.[0];
+  const trailerKey = trailer?.key;
+
   return (
     <div className="bg-black-100 pb-16 space-y-6">
       {/* 1. Immersive Hero Header Presentation */}
@@ -179,6 +182,7 @@ export default function MediaDetails() {
         hover={hover}
         setHover={setHover}
         displayRating={displayRating}
+        trailerKey={trailerKey}
         userMedia={userMedia}
         onWatched={() => updatePreference({ watched: !userMedia.watched })}
         onLike={() => updatePreference({ liked: !userMedia.liked })}

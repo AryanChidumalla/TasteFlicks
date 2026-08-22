@@ -45,7 +45,7 @@ export async function getMediaByPreference(userId, mediaType) {
 
   const { data, error } = await query;
   if (error) {
-    console.error(`Error fetching media by preference (${preference}):`, error);
+    console.error(`Error fetching media by type (${mediaType}):`, error);
     return [];
   }
   return data;

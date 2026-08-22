@@ -1,41 +1,42 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { Layers, Film, Tv, Settings } from "react-feather";
-import { motion } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Layers, Film, Tv, Settings, UserCheck } from "react-feather";
+import { useAuth } from "../../hooks/useAuth";
 
 import ProfileHeader from "./components/ProfileHeader";
 import OverviewSection from "./components/OverviewSection";
 import MoviesSection from "./components/MoviesSection";
 import TVShowsSection from "./components/TVShowsSection";
 import SettingsSection from "./components/Settings";
+import { PageLoader } from "../../components/ui/LoadingSpinner";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { ErrorState } from "../../components/ui/ErrorState";
 
 import { getMovieDetails, getTVShowDetails } from "../../services/tmdb/api";
-import {
-  getUserMediaByFilter,
-  getUserWatchListMedia,
-} from "../../services/supabase/profileApi";
+import { supabase } from "../../services/supabase/client";
 
 const enrichMedia = async (items, fetchDetailsFn) => {
-  if (!items) return [];
-  return Promise.all(
+  if (!items || items.length === 0) return [];
+  const results = await Promise.all(
     items.map(async (item) => {
       try {
         const details = await fetchDetailsFn(item.media_id);
-        return { ...details, userData: item };
+        return details ? { ...details, userData: item } : null;
       } catch (err) {
         console.error(`Error enriching media ID ${item.media_id}:`, err);
         return null;
       }
     }),
-  ).then((results) => results.filter(Boolean));
+  );
+  return results.filter(Boolean);
 };
 
 export default function Profile() {
-  const user = useSelector((s) => s.user.user);
+  const { user, loading: authLoading } = useAuth();
   const userId = user?.id;
 
+  const navigate = useNavigate();
   const [queryParams, setQueryParams] = useSearchParams();
   const activeTab = queryParams.get("category") || "Overview";
 
@@ -43,17 +44,34 @@ export default function Profile() {
     data: profileData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["userProfileData", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [watchedMovies, watchedTV, rawWatchlistMovies, rawWatchlistTV] =
-        await Promise.all([
-          getUserMediaByFilter(userId, "movie"),
-          getUserMediaByFilter(userId, "tv"),
-          getUserWatchListMedia(userId, "movie"),
-          getUserWatchListMedia(userId, "tv"),
-        ]);
+      // Single Supabase query to get all user preferences
+      const { data: allPrefs = [], error: prefError } = await supabase
+        .from("user_media_preferences")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (prefError) {
+        console.error("Error loading user preferences:", prefError);
+        throw prefError;
+      }
+
+      const watchedMovies = allPrefs.filter(
+        (p) => (p.media_type === "movie" || !p.media_type) && p.watched,
+      );
+      const watchedTV = allPrefs.filter(
+        (p) => p.media_type === "tv" && p.watched,
+      );
+      const rawWatchlistMovies = allPrefs.filter(
+        (p) => (p.media_type === "movie" || !p.media_type) && p.watchlist,
+      );
+      const rawWatchlistTV = allPrefs.filter(
+        (p) => p.media_type === "tv" && p.watchlist,
+      );
 
       const [movies, tv, watchlistMovies, watchlistTV] = await Promise.all([
         enrichMedia(watchedMovies, getMovieDetails),
@@ -64,12 +82,19 @@ export default function Profile() {
 
       return { movies, tv, watchlistMovies, watchlistTV };
     },
+    staleTime: 1000 * 60 * 5,
   });
 
-  const movies = profileData?.movies || [];
-  const tv = profileData?.tv || [];
-  const watchlistMovies = profileData?.watchlistMovies || [];
-  const watchlistTV = profileData?.watchlistTV || [];
+  const movies = useMemo(() => profileData?.movies || [], [profileData]);
+  const tv = useMemo(() => profileData?.tv || [], [profileData]);
+  const watchlistMovies = useMemo(
+    () => profileData?.watchlistMovies || [],
+    [profileData],
+  );
+  const watchlistTV = useMemo(
+    () => profileData?.watchlistTV || [],
+    [profileData],
+  );
 
   // 📊 Compute stats dynamically for the Header Context
   const profileMetrics = useMemo(() => {
@@ -102,18 +127,35 @@ export default function Profile() {
     { name: "Settings", Icon: Settings },
   ];
 
-  if (!user)
+  if (authLoading) {
+    return <PageLoader message="Authenticating member profile..." />;
+  }
+
+  if (!user) {
     return (
-      <div className="p-8 text-white-300">
-        Resolving authorization session...
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <EmptyState
+          icon={UserCheck}
+          title="Sign In to Access Your Dashboard"
+          description="Create your cinematic profile, rate movies, track your watchlist, and unlock personalized insights."
+          actionLabel="Sign In / Register"
+          onAction={() => navigate("/signin")}
+        />
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
-      <div className="p-8 text-red-400 font-semibold">
-        Error retrieving profiling database profiles.
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <ErrorState
+          title="Unable to load profile data"
+          message="We were unable to retrieve your tracked history and watchlists from the database."
+          onRetry={() => refetch()}
+        />
       </div>
     );
+  }
 
   const onTabClick = (name) => {
     if (name === activeTab) return;
@@ -137,22 +179,14 @@ export default function Profile() {
             <button
               key={tab.name}
               onClick={() => onTabClick(tab.name)}
-              className={`relative flex items-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-xl transition ${
+              className={`flex items-center gap-2 px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-xl transition-all duration-200 cursor-pointer ${
                 active
-                  ? "text-purple-400"
-                  : "text-white-300 hover:text-white-100"
+                  ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-md shadow-purple-950/20"
+                  : "text-white-300 hover:text-white-100 hover:bg-white/[0.03] border border-transparent"
               }`}
             >
               <tab.Icon size={14} />
               <span>{tab.name}</span>
-
-              {active && (
-                <motion.div
-                  layoutId="activeProfileTabGlow"
-                  className="absolute inset-0 bg-purple-500/10 border border-purple-500/20 rounded-xl -z-10"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
             </button>
           );
         })}

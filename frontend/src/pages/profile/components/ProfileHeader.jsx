@@ -7,8 +7,6 @@ export default function ProfileHeader({
   hoursWatched = 0,
   genreCount = {},
 }) {
-  if (!user) return null;
-
   // Compute the top 3 genre tags for public tracking display
   const topGenres = useMemo(() => {
     return Object.entries(genreCount || {})
@@ -16,6 +14,8 @@ export default function ProfileHeader({
       .slice(0, 3)
       .map(([genreName]) => genreName);
   }, [genreCount]);
+
+  if (!user) return null;
 
   return (
     <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-950/20 via-black-200 to-black-200 border border-white/[0.05] p-6 md:p-8">

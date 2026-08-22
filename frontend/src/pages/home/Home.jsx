@@ -1,8 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { ArrowRight } from "react-feather";
-import { useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 
 import {
   usePopularMoviesInfinite,
@@ -18,7 +17,7 @@ import HeroSection from "../../pages/home/HeroSection";
 import { RecommendedToUser } from "../../pages/recommendations/RecommendedToUser";
 
 export default function Home() {
-  const user = useSelector((state) => state.user.user);
+  const { user } = useAuth();
   const userId = user?.id;
   const navigate = useNavigate();
 

@@ -48,21 +48,36 @@ export function RecommendedToUser({
   if (!showSkeleton && list.length === 0) {
     return (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="text-center py-10 bg-white/[0.01] border border-dashed border-white/[0.05] rounded-2xl text-white-300 text-sm space-y-3">
-          <p>
-            No custom recommendations computed yet. Rate or favorite more titles
-            to curate this shelf!
-          </p>
-          <button
-            onClick={handleManualRefresh}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-white-100 transition"
-          >
-            <RefreshCw
-              size={12}
-              className={isRefreshing ? "animate-spin" : ""}
-            />
-            <span>Force Calculate Feed</span>
-          </button>
+        <div className="text-center py-12 px-6 bg-gradient-to-br from-purple-950/15 via-white/[0.015] to-transparent border border-dashed border-purple-500/20 rounded-3xl space-y-4 max-w-2xl mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center mx-auto">
+            <Star size={20} className="fill-purple-400/30" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-base font-bold text-white-100">
+              Personalized Movie Recommendations
+            </h3>
+            <p className="text-xs sm:text-sm text-white-300 max-w-md mx-auto leading-relaxed">
+              Rate or mark movies as watched to train your personal taste vector and unlock AI-powered recommendations.
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+            <Link
+              to="/movies"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md transition"
+            >
+              <span>Explore & Rate Movies</span>
+            </Link>
+            <button
+              onClick={handleManualRefresh}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl text-white-300 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:text-white-100 transition"
+            >
+              <RefreshCw
+                size={12}
+                className={isRefreshing ? "animate-spin text-purple-400" : ""}
+              />
+              <span>Check for New Suggestions</span>
+            </button>
+          </div>
         </div>
       </section>
     );

@@ -24,6 +24,7 @@ export function useInfiniteMedia(queryKey, apiFn, filters = null) {
     queryKey: filters ? [...queryKey, filters] : queryKey,
     queryFn: ({ pageParam = 1 }) =>
       filters ? apiFn({ ...filters, page: pageParam }) : apiFn(pageParam),
+    initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage?.currentPage < lastPage?.totalPages
         ? lastPage.currentPage + 1

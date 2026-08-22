@@ -1,22 +1,23 @@
 import React from "react";
 import { Calendar, Heart, PlayCircle, Star, TrendingUp } from "react-feather";
 import { useSearchParams } from "react-router-dom";
+import { useInfiniteMedia } from "../hooks/useMediaQueries";
 import {
-  usePopularMoviesInfinite,
-  useTopRatedMoviesInfinite,
-  useUpcomingMoviesInfinite,
-  useTrendingMoviesInfinite,
-  useNowPlayingMoviesInfinite,
-} from "../hooks/useMediaQueries";
+  getPopularMovies,
+  getTopRatedMovies,
+  getUpcomingMovies,
+  getTrendingMovies,
+  getNowPlayingMovies,
+} from "../services/tmdb/api";
 import { Black200Button, PrimaryButton } from "../components/ui/buttons";
 import { MediaCard } from "../components/ui/MediaCard";
 
 const MOVIE_CATEGORIES = [
-  { name: "Popular", icon: Heart, hook: usePopularMoviesInfinite },
-  { name: "Top Rated", icon: Star, hook: useTopRatedMoviesInfinite },
-  { name: "Upcoming", icon: Calendar, hook: useUpcomingMoviesInfinite },
-  { name: "Trending", icon: TrendingUp, hook: useTrendingMoviesInfinite },
-  { name: "Now Playing", icon: PlayCircle, hook: useNowPlayingMoviesInfinite },
+  { name: "Popular", icon: Heart, apiFn: getPopularMovies, key: "popular" },
+  { name: "Top Rated", icon: Star, apiFn: getTopRatedMovies, key: "top_rated" },
+  { name: "Upcoming", icon: Calendar, apiFn: getUpcomingMovies, key: "upcoming" },
+  { name: "Trending", icon: TrendingUp, apiFn: getTrendingMovies, key: "trending" },
+  { name: "Now Playing", icon: PlayCircle, apiFn: getNowPlayingMovies, key: "now_playing" },
 ];
 
 export default function Movies() {
@@ -27,7 +28,10 @@ export default function Movies() {
     MOVIE_CATEGORIES.find((c) => c.name === category) || MOVIE_CATEGORIES[0];
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    currentCategory.hook();
+    useInfiniteMedia(
+      [`movies-infinite-${currentCategory.key}`],
+      currentCategory.apiFn,
+    );
 
   const movies = data?.pages.flatMap((page) => page.results) || [];
 

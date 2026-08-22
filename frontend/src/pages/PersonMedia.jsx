@@ -14,57 +14,55 @@ export default function PersonMedia() {
   const [movieResults, setMovieResults] = useState([]);
   const [tvResults, setTVResults] = useState([]);
   const [personName, setPersonName] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleCount, setVisibleCount] = useState(18);
   const [loading, setLoading] = useState(false);
 
-  const fetchPersonCredits = async (type, page = 1) => {
-    if (!personId) return;
-    setLoading(true);
-
-    try {
-      let data;
-      switch (type) {
-        case "movie":
-          data = await getPersonMovieCredits(personId, page);
-          break;
-        case "tv":
-          data = await getPersonTVCredits(personId, page);
-          break;
-        default:
-          return;
-      }
-
-      if (data?.person_name && !personName) {
-        setPersonName(data.person_name);
-      }
-
-      const results = Array.isArray(data?.results) ? data.results : [];
-
-      if (page === 1) {
-        type === "movie" ? setMovieResults(results) : setTVResults(results);
-      } else {
-        type === "movie"
-          ? setMovieResults((prev) => [...prev, ...results])
-          : setTVResults((prev) => [...prev, ...results]);
-      }
-    } catch (err) {
-      console.error("Error fetching person credits:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    setCurrentPage(1);
-    fetchPersonCredits(mediaType, 1);
-  }, [personId, mediaType]);
+    let isCancelled = false;
 
-  useEffect(() => {
-    if (currentPage === 1) return;
-    fetchPersonCredits(mediaType, currentPage);
-  }, [currentPage]);
+    const fetchPersonCredits = async () => {
+      if (!personId) return;
+      setLoading(true);
+
+      try {
+        const data =
+          mediaType === "movie"
+            ? await getPersonMovieCredits(personId)
+            : await getPersonTVCredits(personId);
+
+        if (isCancelled) return;
+
+        if (data?.person_name && !personName) {
+          setPersonName(data.person_name);
+        }
+
+        const results = Array.isArray(data?.results) ? data.results : [];
+
+        if (mediaType === "movie") {
+          setMovieResults(results);
+        } else {
+          setTVResults(results);
+        }
+      } catch (err) {
+        console.error("Error fetching person credits:", err);
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    setVisibleCount(18);
+    fetchPersonCredits();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [personId, mediaType, personName]);
 
   const currentResults = mediaType === "movie" ? movieResults : tvResults;
+  const displayedResults = currentResults.slice(0, visibleCount);
+  const hasMore = visibleCount < currentResults.length;
 
   const renderMediaToggle = (type, label) => {
     const isActive = mediaType === type;
@@ -101,13 +99,13 @@ export default function PersonMedia() {
       </div>
 
       {/* Main Results Grid */}
-      {currentResults.length > 0 ? (
+      {displayedResults.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-          {currentResults.map((item) => {
+          {displayedResults.map((item, index) => {
             if (!item || !item.id) return null;
             return (
               <div
-                key={`${mediaType}-${item.id}`}
+                key={`${mediaType}-${item.id}-${index}`}
                 className="transition-transform duration-300 hover:scale-[1.02]"
               >
                 <MediaCard item={item} mediaType={mediaType} />
@@ -124,12 +122,11 @@ export default function PersonMedia() {
       )}
 
       {/* Pagination Action Section */}
-      {currentResults.length > 0 && (
+      {hasMore && (
         <div className="flex justify-center pt-4">
           <Black200Button
-            name={loading ? "Loading Credits..." : "Load More"}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            disabled={loading}
+            name="Load More"
+            onClick={() => setVisibleCount((prev) => prev + 18)}
           />
         </div>
       )}

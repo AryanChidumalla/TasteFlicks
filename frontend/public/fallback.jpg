@@ -1,0 +1,25 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 750" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14171F" />
+      <stop offset="50%" stop-color="#0D1117" />
+      <stop offset="100%" stop-color="#07090C" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A855F7" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+  </defs>
+  <rect width="500" height="750" fill="url(#bg)" rx="16" />
+  <rect x="2" y="2" width="496" height="746" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="2" rx="14" />
+  <g transform="translate(200, 280)">
+    <rect width="100" height="80" rx="12" fill="#1C1F26" stroke="#FFFFFF" stroke-opacity="0.1" stroke-width="2" />
+    <path d="M 15 20 L 35 20 L 30 0 L 10 0 Z" fill="url(#accent)" />
+    <path d="M 45 20 L 65 20 L 60 0 L 40 0 Z" fill="url(#accent)" />
+    <path d="M 75 20 L 95 20 L 90 0 L 70 0 Z" fill="url(#accent)" />
+    <circle cx="50" cy="50" r="14" fill="none" stroke="url(#accent)" stroke-width="3" />
+    <polygon points="46,43 58,50 46,57" fill="url(#accent)" />
+  </g>
+  <text x="250" y="420" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.7" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" letter-spacing="1.5">NO POSTER</text>
+  <text x="250" y="445" text-anchor="middle" fill="#A855F7" fill-opacity="0.9" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" letter-spacing="2">TASTEFLICKS</text>
+</svg>

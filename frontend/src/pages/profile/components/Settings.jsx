@@ -1,22 +1,53 @@
-import React, { useState } from "react";
-import { User, Shield, LogOut, Trash2, Sliders } from "react-feather";
-import { supabase } from "../../../services/supabase/client";
+import React, { useState, useEffect } from "react";
+import { User, Shield, LogOut, Trash2, Sliders, Check } from "react-feather";
+import { useAuth } from "../../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../../services/supabase/client";
+import { toast } from "react-toastify";
 
 export default function SettingsSection() {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
-  // UI States for local preference control examples
-  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [defaultTab, setDefaultTab] = useState("Overview");
 
+  useEffect(() => {
+    if (user?.display_name) {
+      setDisplayName(user.display_name);
+    }
+  }, [user]);
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { display_name: displayName.trim() },
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Profile display name updated successfully!");
+      }
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      toast.error("Failed to update profile.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Logout error:", error.message);
-    } else {
+    try {
+      await signOut();
+      toast.info("Signed out of your account.");
       navigate("/");
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
@@ -29,33 +60,40 @@ export default function SettingsSection() {
           <h3 className="text-lg font-bold">Profile Details</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs text-white-300 font-medium pl-1">
-              Display Name
-            </label>
-            <input
-              type="text"
-              placeholder="Update username..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-black-300/50 text-sm p-2.5 rounded-xl border border-white/[0.06] outline-none focus:border-purple-500/50 transition"
-            />
+        <form onSubmit={handleUpdateProfile} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-white-300 font-medium pl-1">
+                Display Name
+              </label>
+              <input
+                type="text"
+                placeholder="Enter your display name..."
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full bg-black-300/50 text-sm p-2.5 rounded-xl border border-white/[0.06] outline-none focus:border-purple-500/50 transition text-white-100 placeholder-white-300/40"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-white-300 font-medium pl-1">
+                Email Address (Read Only)
+              </label>
+              <input
+                type="text"
+                value={user?.email || ""}
+                disabled
+                className="w-full bg-white/[0.02] text-sm p-2.5 rounded-xl border border-white/[0.04] text-white-300/60 cursor-not-allowed"
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-xs text-white-300 font-medium pl-1">
-              Cinematic Bio
-            </label>
-            <input
-              type="text"
-              placeholder="Tell others what you love watching..."
-              className="w-full bg-black-300/50 text-sm p-2.5 rounded-xl border border-white/[0.06] outline-none focus:border-purple-500/50 transition"
-            />
-          </div>
-        </div>
-        <button className="text-xs bg-purple-600 hover:bg-purple-500 font-semibold px-4 py-2 rounded-xl transition">
-          Save Changes
-        </button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="inline-flex items-center gap-1.5 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold px-4 py-2 rounded-xl transition shadow-md shadow-purple-900/20 disabled:opacity-50"
+          >
+            {isSaving ? "Updating Profile..." : "Save Profile Details"}
+          </button>
+        </form>
       </section>
 
       {/* 2. PREFERENCES SECTION */}

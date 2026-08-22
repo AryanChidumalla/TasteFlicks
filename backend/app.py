@@ -25,11 +25,22 @@ class RecommendationRequest(BaseModel):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ],
+    allow_origin_regex=r"https://.*(vercel\.app|netlify\.app|onrender\.com)",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "TasteFlicks Recommendation API", "version": "2.0.0"}
 
 # ==========================================
 # ⚙️ CONFIGURATION TOGGLE
