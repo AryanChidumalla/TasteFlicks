@@ -2,14 +2,14 @@
 import MediaLibrarySection from "./MediaLibrarySection";
 
 export default function TVShowsSection({
-  shows = [],
-  watchlistShows = [],
+  tv = [],
+  watchlistTV = [],
   isLoading = false,
 }) {
   return (
     <MediaLibrarySection
-      items={shows}
-      watchlistItems={watchlistShows}
+      items={tv}
+      watchlistItems={watchlistTV}
       isLoading={isLoading}
       mediaType="tv"
     />
